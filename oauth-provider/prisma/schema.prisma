@@ -1,0 +1,417 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+  runtime = "vercel-edge"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+/*
+
+
+
+
+
+
+
+
+*/
+
+
+model User {
+  id    String     @id @default(cuid())
+  email String?  @unique
+  emailVerified DateTime?
+  image String?
+  name  String?
+  // role: 'admin', 'beneficiary', 'registeredDonor', 'guestDonor'
+  role String @default("guest_user") @db.VarChar(20)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  accounts Account[]
+  sessions Session[]
+  otpCodes OtpCode[]
+  registeredDonor RegisteredDonor?
+  beneficiary Beneficiary?
+  createdPools Pool[]
+}
+
+
+model Session {
+  id String @id @default(cuid())
+  sessionToken String @unique
+  userId String
+  expires DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+}
+
+
+model Account {
+  id String @id @default(cuid())
+  userId String
+  type String
+  provider String
+  providerAccountId String
+  
+  refresh_token String? @db.Text
+  access_token String? @db.Text
+  expires_at Int?
+  token_type String? 
+  scope String?
+  id_token String? @db.Text
+  session_state String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model VerificationToken {
+  identifier String
+  token String @unique
+  expires DateTime
+
+  @@unique([identifier, token])
+}
+
+model OtpCode {
+  id String @id @default(cuid())
+  code String
+  userId String
+  expires DateTime
+  used Boolean @default(false)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+
+// ============================================
+// DONOR MODELS
+// ============================================
+model GuestDonor {
+  id Int @id @default(autoincrement())
+  email String @unique
+  first_donation_date DateTime?
+  last_donation_date DateTime?
+  donation_count Int @default(0)
+  total_donated Float @default(0)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  donations Donation[]
+
+  @@map("guest_donors")
+}
+
+
+// Registered donors - linked to User account
+model RegisteredDonor {
+  id Int @id @default(autoincrement())
+  userId String @unique
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name String?
+  phone String?
+  donation_count Int @default(0)
+  total_donated Float @default(0)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  donations Donation[]
+
+  @@map("registered_donors")
+}
+
+
+// ============================================
+// BENEFICIARY MODEL
+// ============================================
+
+enum BeneficiaryType {
+  SCHOLAR
+  EMPLOYEE
+  COMMUNITY
+}
+
+model Beneficiary {
+  id Int @id @default(autoincrement())
+  userId String @unique
+  user User @relation(fields: [userId], references: [id] , onDelete: Cascade)
+  username String @unique
+  password String
+  type BeneficiaryType
+  firstName String?
+  lastName String?
+  email String?
+  phone String?
+  address String?
+  isActive Boolean @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  createdBy String? //Admin who created this account
+
+  @@map("beneficiaries")
+  requests BeneficiaryRequest[]
+}
+
+// ============================================
+// BENEFICIARY REQUEST MODEL
+// ============================================
+
+enum RequestStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  DISBURSED
+}
+
+enum UrgencyLevel {
+  LOW        // > 30 days
+  MEDIUM     // 7-30 days
+  HIGH       // < 7 days
+}
+
+model BeneficiaryRequest {
+  id Int @id @default(autoincrement())
+
+  // link to beneficiary
+  beneficiaryId Int
+  beneficiary Beneficiary @relation(fields: [beneficiaryId], references: [id], onDelete: Cascade)
+
+  // Request details
+  purpose String
+  amount Float
+  date_needed DateTime
+  email String
+  additional_notes String? @db.Text
+
+  urgency_level UrgencyLevel @default(LOW)
+
+  // Status tracking
+  status RequestStatus @default(PENDING)
+  reviewed_by String? // Admin who reviewed
+  reviewed_at DateTime?
+  rejection_reason String?
+
+  // Disbursement tracking
+  disbursed_at DateTime?
+  disbursed_amount Float?
+
+  // Receipt / Liquidation / Thank-you (post-disbursement)
+  receipt_message String? @db.Text  // Beneficiary's thank-you / comment to donors
+  receipt_submitted_at DateTime?     // When the receipt was submitted
+
+  // Timestamps
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  documents RequestDocument[]
+  allocations Allocation[]
+  receipts  DisbursementReceipt[]
+  @@map("beneficiary_requests")
+}
+
+model RequestDocument {
+  id Int @id @default(autoincrement())
+  requestId Int
+  request BeneficiaryRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  // File info (actual file stored in cloud storage)
+  file_name String
+  file_url String // URL from Vercel Blob/Uploadthing/etc
+  file_type String
+  file_size Int
+
+  uploaded_at DateTime @default(now())
+
+  @@index([requestId])
+  @@map("request_documents")
+}
+
+// Receipt / Proof / Liquidation files uploaded by beneficiary after disbursement
+model DisbursementReceipt {
+  id        Int    @id @default(autoincrement())
+  requestId Int
+  request   BeneficiaryRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  file_name String
+  file_url  String
+  file_type String
+  file_size Int
+
+  uploaded_at DateTime @default(now())
+
+  @@index([requestId])
+  @@map("disbursement_receipts")
+}
+
+
+
+// ============================================
+// DONATION & POOL MODELS
+// ============================================
+
+model Pool {
+  id String @id @default(cuid())
+  name String @unique
+  description String?
+  total_received Float @default(0)
+  allocated_amount Float @default(0)
+  available_amount Float @default(0)
+  status String @default("active") // active, paused, closed
+  createdById String
+  createdBy User @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  donation Donation[]
+  allocations Allocation[]
+  @@map("pools")
+}
+
+model Donation {
+  id Int @id @default(autoincrement())
+
+  // Donor - either guest or registered (one mustbe set)
+  guest_donor_id Int?
+  registered_donor_id Int?
+  guestDonor GuestDonor? @relation(fields: [guest_donor_id], references: [id], onDelete: SetNull)
+  registeredDonor RegisteredDonor? @relation(fields: [registered_donor_id], references: [id], onDelete: SetNull)
+
+
+  // Donation details
+  email String
+  amount Float
+  currency String @default("PHP")
+  donation_type String @db.VarChar(20) // restricted or unrestricted
+
+  // Pool for restricted donations
+  pool_id String?
+  pool Pool? @relation(fields: [pool_id], references: [id], onDelete: SetNull)
+
+
+  // Additional Info
+  message String? // Donor message
+  is_anonymous Boolean @default(false)
+
+  // Payment (PayMongo)
+  status String @default("pending") // pending, processing, completed, failed, refunded
+  reference_code String @unique
+  payment_intent_id String?
+  payment_method String?
+  payment_fee Float?
+  net_amount Float? // Amount after fees
+  paid_at DateTime? // When payment completed
+
+
+  // Blockchain
+  blockchain_txt_hash String?
+  blockchain_network String?
+  blockchain_status String?
+  blockchain_saved_at DateTime?
+
+  remaining_amount Float?
+
+  // Timestamps
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  donationAllocations DonationAllocation[]
+
+  @@index([email])
+  @@index([status])
+  @@index([created_at])
+  @@map("donations")
+}
+
+
+// ============================================
+// Allocation
+// ============================================
+enum FundSourceType {
+  UNRESTRICTED
+  RESTRICTED
+}
+
+// Tracks unrestricted fund balance
+model UnrestrictedFund {
+  id Int @id @default(autoincrement())
+  total_received Float @default(0)
+  total_allocated Float @default(0)
+  available_balance Float @default(0)
+  updated_at DateTime @updatedAt
+
+  @@map("unrestricted_fund")
+}
+
+
+
+
+model Allocation {
+  id Int @id @default(autoincrement())
+
+  // Which request this allocationis for
+  requestId Int
+  request BeneficiaryRequest @relation(fields: [requestId], references: [id])
+
+  // Source of funds
+  source_type FundSourceType 
+  poolId String?
+  pool Pool? @relation(fields: [poolId], references: [id])
+
+  // Amount allocated from this source
+  amount Float
+
+  // Admin who made allocation
+  allocated_by String
+  allocated_at DateTime @default(now())
+  
+
+  // Disbursement scheduling
+  disbursement_date DateTime?
+  disbursement_notes String?
+
+  // Status
+  is_disbursed Boolean @default(false)
+  disbursed_at DateTime?
+
+  // Track linked donations for donor notification
+  donationAllocations DonationAllocation[]
+
+  @@map("allocations")
+}
+
+// Links specific donations to allocations (for donor notification)
+model DonationAllocation {
+  id Int @id @default(autoincrement())
+  allocationId Int
+  allocation Allocation @relation(fields: [allocationId], references: [id])
+  donationId Int
+  donation Donation @relation(fields: [donationId], references: [id])
+
+  amount_used Float
+
+  // Notification tracking
+  donor_notified Boolean @default(false)
+  notified_at DateTime?
+  notification_type String?
+
+  @@unique([allocationId, donationId])
+  @@map("donation_allocations")
+}
