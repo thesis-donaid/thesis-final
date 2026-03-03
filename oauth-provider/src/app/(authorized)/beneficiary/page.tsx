@@ -233,7 +233,7 @@ export default function BeneficiaryDashboard() {
                                 <FileText className="w-10 h-10 text-gray-200 mx-auto mb-3" />
                                 <p className="text-gray-400 text-sm">No requests found</p>
                                 {activeTab === 'active' && (
-                                    <Link href="/beneficiary/requests/new">
+                                    <Link href="/beneficiary/requests">
                                         <Button variant="outline" className="mt-4 text-sm border-red-200 text-red-600 hover:bg-red-50">
                                             <Plus size={14} className="mr-1.5" /> Submit your first request
                                         </Button>

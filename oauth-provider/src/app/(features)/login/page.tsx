@@ -140,7 +140,7 @@ export default function LoginPage() {
                 return;
             }
 
-            window.location.href = "/profile";
+            window.location.href = "/";
         } catch {
             setError("An error occurred. Please try again.");
             if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
