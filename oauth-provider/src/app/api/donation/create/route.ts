@@ -65,8 +65,8 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        const unrestricted_default = await prisma.pool.findUnique({
-            where: { name: "unrestricted" }
+        const unrestricted_default = await prisma.pool.findFirst({
+            where: { name: { equals: "unrestricted", mode: "insensitive" } }
         })
 
         if(!unrestricted_default) {
