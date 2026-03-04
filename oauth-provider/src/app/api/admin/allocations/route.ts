@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
             const allocationIds = allocations.map(a => a.id);
             const donorsToNotify = await getDonorsToNotify(allocationIds);
 
-            // Send emails to donors
+            // Send emails to donors via linked donation allocations
             for (const donor of donorsToNotify) {
                 if (!donor.isAnonymous) {
                     try {
@@ -97,6 +97,87 @@ export async function POST(req: NextRequest) {
 
             // mark as notified
             await markDonorsNotified(donorsToNotify.map(d => d.donationAllocationId));
+
+            // Fallback: if no donors found via donationAllocations, query pool donations directly
+            if (donorCount === 0) {
+                const poolIds = allocations
+                    .filter(a => a.pool?.id)
+                    .map(a => a.pool!.id);
+
+                const notifiedEmails = new Set<string>();
+
+                if (poolIds.length > 0) {
+                    const poolDonations = await prisma.donation.findMany({
+                        where: {
+                            pool_id: { in: poolIds },
+                            status: "completed",
+                            is_anonymous: false,
+                        },
+                        include: {
+                            registeredDonor: { include: { user: true } },
+                        },
+                        distinct: ["email"],
+                    });
+
+                    for (const donation of poolDonations) {
+                        if (donation.email && !notifiedEmails.has(donation.email)) {
+                            notifiedEmails.add(donation.email);
+                            const donorName = donation.registeredDonor?.name
+                                ?? donation.registeredDonor?.user?.name
+                                ?? "Generous Donor";
+                            try {
+                                await sendAllocationNotificationEmail({
+                                    to: donation.email,
+                                    donorName,
+                                    amountUsed: donation.amount,
+                                    purpose: request?.purpose ?? "Community Support",
+                                    disbursementDate: new Date(body.disbursementDate),
+                                });
+                                donorCount++;
+                            } catch (emailError) {
+                                console.error(`Failed to send allocation email to donor ${donation.email}:`, emailError);
+                            }
+                        }
+                    }
+                }
+
+                // Also check unrestricted donations
+                const hasUnrestricted = allocations.some(a => a.source_type === "UNRESTRICTED");
+                if (hasUnrestricted) {
+                    const unrestrictedDonations = await prisma.donation.findMany({
+                        where: {
+                            donation_type: "unrestricted",
+                            status: "completed",
+                            is_anonymous: false,
+                        },
+                        include: {
+                            registeredDonor: { include: { user: true } },
+                        },
+                        distinct: ["email"],
+                    });
+
+                    for (const donation of unrestrictedDonations) {
+                        if (donation.email && !notifiedEmails.has(donation.email)) {
+                            notifiedEmails.add(donation.email);
+                            const donorName = donation.registeredDonor?.name
+                                ?? donation.registeredDonor?.user?.name
+                                ?? "Generous Donor";
+                            try {
+                                await sendAllocationNotificationEmail({
+                                    to: donation.email,
+                                    donorName,
+                                    amountUsed: donation.amount,
+                                    purpose: request?.purpose ?? "Community Support",
+                                    disbursementDate: new Date(body.disbursementDate),
+                                });
+                                donorCount++;
+                            } catch (emailError) {
+                                console.error(`Failed to send allocation email to donor ${donation.email}:`, emailError);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         if (body.notifyBeneficiary && request?.beneficiary) {

@@ -50,7 +50,7 @@ export default function VerifyOtp() {
       }
 
       // Full page redirect to force session reload
-      window.location.href = "/profile";
+      window.location.href = "/";
     } catch (err) {
       setError("Something went wrong");
       setLoading(false);

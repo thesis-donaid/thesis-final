@@ -745,7 +745,6 @@ export default function DonationPage() {
                             <div className="space-y-4">
                                 <a
                                     href={response.checkout_url}
-                                    target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex items-center justify-center w-full bg-red-600 text-white h-16 rounded-2xl font-black text-lg hover:bg-red-700 transition-all shadow-xl shadow-red-200 group"
                                 >

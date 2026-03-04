@@ -37,7 +37,7 @@ export async function createPaymentIntent({
     reference_code,
     email,
     name,
-    redirect_success = `${process.env.NEXTAUTH_URL}/donation/success`,
+    redirect_success = `${process.env.NEXTAUTH_URL}/donor`,
     redirect_failed = `${process.env.NEXTAUTH_URL}/donation/failed`,
     payment_method,
 }: CreatePaymentIntentParams) {

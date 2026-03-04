@@ -236,6 +236,48 @@ export async function PATCH(
                     }
                 }
             }
+
+            // Fallback: if no donationAllocations exist, query donations in the pool directly
+            if (notifiedEmails.size === 0) {
+                const poolIds = updated.allocations
+                    .filter(a => a.poolId)
+                    .map(a => a.poolId as string);
+
+                if (poolIds.length > 0) {
+                    const donations = await prisma.donation.findMany({
+                        where: {
+                            pool_id: { in: poolIds },
+                            status: "completed",
+                            is_anonymous: false,
+                        },
+                        include: {
+                            registeredDonor: { include: { user: true } },
+                        },
+                        distinct: ["email"],
+                    });
+
+                    for (const donation of donations) {
+                        if (donation.email && !notifiedEmails.has(donation.email)) {
+                            notifiedEmails.add(donation.email);
+                            const donorName = donation.registeredDonor?.name
+                                ?? donation.registeredDonor?.user?.name
+                                ?? "Valued Donor";
+                            try {
+                                await sendDisbursementNotificationEmail({
+                                    to: donation.email,
+                                    recipientName: donorName,
+                                    amount: totalDisbursed,
+                                    purpose: updated.purpose,
+                                    disbursementMethod: disbursement_method,
+                                    isBeneficiary: false,
+                                });
+                            } catch (emailError) {
+                                console.error(`Failed to send disbursement email to donor ${donation.email}:`, emailError);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         return NextResponse.json({
