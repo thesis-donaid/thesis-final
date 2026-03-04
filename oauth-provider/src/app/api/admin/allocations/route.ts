@@ -68,6 +68,13 @@ export async function POST(req: NextRequest) {
             include: { beneficiary: { include: { user: true }}}
         });
 
+        // Resolve beneficiary name for email
+        const beneficiaryName = request?.beneficiary
+            ? (`${request.beneficiary.firstName ?? ""} ${request.beneficiary.lastName ?? ""}`.trim()
+                || request.beneficiary.user?.name
+                || "a beneficiary")
+            : "a beneficiary";
+
         // Send notification
         let donorCount = 0;
         let beneficiarNotified = false;
@@ -85,8 +92,8 @@ export async function POST(req: NextRequest) {
                             donorName: donor.donorName,
                             amountUsed: donor.amountUsed,
                             purpose: donor.requestPurpose,
-                            disbursementDate: donor.disbursementDate
-
+                            disbursementDate: donor.disbursementDate,
+                            beneficiaryName,
                         });
                         donorCount++
                     } catch (emailError) {
@@ -132,6 +139,7 @@ export async function POST(req: NextRequest) {
                                     amountUsed: donation.amount,
                                     purpose: request?.purpose ?? "Community Support",
                                     disbursementDate: new Date(body.disbursementDate),
+                                    beneficiaryName,
                                 });
                                 donorCount++;
                             } catch (emailError) {
@@ -169,6 +177,7 @@ export async function POST(req: NextRequest) {
                                     amountUsed: donation.amount,
                                     purpose: request?.purpose ?? "Community Support",
                                     disbursementDate: new Date(body.disbursementDate),
+                                    beneficiaryName,
                                 });
                                 donorCount++;
                             } catch (emailError) {

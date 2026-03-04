@@ -15,6 +15,7 @@ export interface AllocationEmailParams {
     purpose: string;
     disbursementDate: Date | null;
     isBeneficiary?: boolean;
+    beneficiaryName?: string;
 }
 
 
@@ -35,6 +36,7 @@ export interface DisbursementEmailParams {
     disbursementMethod: string; // e.g. 'cash', 'check', 'bank_transfer'
     disbursementNotes?: string;
     isBeneficiary: boolean;
+    beneficiaryName?: string;
 }
 
 export interface ReceiptNotificationParams {

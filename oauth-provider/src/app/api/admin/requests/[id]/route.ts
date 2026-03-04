@@ -229,6 +229,7 @@ export async function PATCH(
                                 purpose: updated.purpose,
                                 disbursementMethod: disbursement_method,
                                 isBeneficiary: false,
+                                beneficiaryName,
                             });
                         } catch (emailError) {
                             console.error(`Failed to send disbursement email to donor ${donorEmail}:`, emailError);
@@ -270,6 +271,7 @@ export async function PATCH(
                                     purpose: updated.purpose,
                                     disbursementMethod: disbursement_method,
                                     isBeneficiary: false,
+                                    beneficiaryName,
                                 });
                             } catch (emailError) {
                                 console.error(`Failed to send disbursement email to donor ${donation.email}:`, emailError);

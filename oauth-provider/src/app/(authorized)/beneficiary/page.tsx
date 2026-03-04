@@ -174,7 +174,7 @@ export default function BeneficiaryDashboard() {
                         </h1>
                         <p className="text-sm text-gray-500 mt-1">Track and manage your assistance requests</p>
                     </div>
-                    <Link href="/beneficiary/requests/new">
+                    <Link href="/beneficiary/requests">
                         <Button className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 shadow-sm">
                             <Plus size={16} />
                             New Request

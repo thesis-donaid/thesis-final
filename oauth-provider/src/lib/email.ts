@@ -86,7 +86,7 @@ export async function sendDonationConfirmation(data: RequestEmailData) {
 
 
 export async function sendAllocationNotificationEmail(params: AllocationEmailParams) {
-  const { to, donorName, amountUsed, purpose, disbursementDate, isBeneficiary } = params;
+  const { to, donorName, amountUsed, purpose, disbursementDate, isBeneficiary, beneficiaryName } = params;
   
   const formattedDate = disbursementDate
    ? disbursementDate.toLocaleDateString("en-PH", {
@@ -115,10 +115,12 @@ export async function sendAllocationNotificationEmail(params: AllocationEmailPar
       <h2>Dear ${donorName},</h2>
       <p>We're excited to share that your donation to <strong>${ORG_NAME}</strong> is being put to good use!</p>
       <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-        <p><strong>Your Contribution:</strong> ₱${amountUsed.toLocaleString()}</p>
+        <p><strong>Your Donation Used:</strong> ₱${amountUsed.toLocaleString()}</p>
         <p><strong>Purpose:</strong> ${purpose}</p>
+        ${beneficiaryName ? `<p><strong>Beneficiary:</strong> ${beneficiaryName}</p>` : ''}
         <p><strong>Scheduled Disbursement:</strong> ${formattedDate}</p>
       </div>
+      <p>We used your <strong>₱${amountUsed.toLocaleString()}</strong> donation to help <strong>${beneficiaryName || 'a beneficiary'}</strong> with their request for <em>${purpose}</em>.</p>
       <p>We'll send you another update once the funds have been disbursed, including proof of how your donation made a difference.</p>
       <p>Thank you for your generosity!</p>
     `;
@@ -133,7 +135,7 @@ export async function sendAllocationNotificationEmail(params: AllocationEmailPar
 
 
 export async function sendDisbursementNotificationEmail(params: DisbursementEmailParams) {
-  const { to, recipientName, amount, purpose, disbursementMethod, disbursementNotes, isBeneficiary } = params;
+  const { to, recipientName, amount, purpose, disbursementMethod, disbursementNotes, isBeneficiary, beneficiaryName } = params;
 
   const methodLabel: Record<string, string> = {
     cash: 'Cash (pick up at the office)',
@@ -169,10 +171,11 @@ export async function sendDisbursementNotificationEmail(params: DisbursementEmai
     : `
         <h2 style="color: #2563eb;">Your Donation Made a Difference! \uD83D\uDE4F</h2>
         <p>Dear ${recipientName},</p>
-        <p>We\'re happy to let you know that the funds from your donation to <strong>${ORG_NAME}</strong> have been successfully disbursed to a beneficiary.</p>
+        <p>We\'re happy to let you know that <strong>\u20B1${amount.toLocaleString()}</strong> from your donation to <strong>${ORG_NAME}</strong> has been successfully disbursed to <strong>${beneficiaryName || 'a beneficiary'}</strong>.</p>
         <div style="background: #eff6ff; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #bfdbfe;">
           <p><strong>Your Contribution Used:</strong> \u20B1${amount.toLocaleString()}</p>
           <p><strong>Purpose:</strong> ${purpose}</p>
+          ${beneficiaryName ? `<p><strong>Beneficiary:</strong> ${beneficiaryName}</p>` : ''}
         </div>
         <p>Thank you for your generosity. Your support is making a real impact in someone\'s life!</p>
         <p>We\'ll continue to keep you updated on how your donations are being used.</p>

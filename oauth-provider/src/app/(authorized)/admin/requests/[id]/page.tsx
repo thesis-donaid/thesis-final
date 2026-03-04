@@ -112,6 +112,16 @@ interface AllocationEntry {
     amount: string;
 }
 
+interface PoolDonor {
+    donationId: number;
+    donorName: string;
+    email: string;
+    totalDonated: number;
+    remainingAmount: number;
+    paidAt: string | null;
+    isAnonymous: boolean;
+}
+
 const urgencyConfig: Record<string, { label: string; className: string; icon: React.ElementType }> = {
     LOW:    { label: 'Low Priority',  className: 'bg-blue-50 text-blue-600 border border-blue-200', icon: Clock },
     MEDIUM: { label: 'Medium',        className: 'bg-amber-50 text-amber-600 border border-amber-200', icon: AlertTriangle },
@@ -155,6 +165,30 @@ export default function AdminRequestReviewPage() {
     // Disbursement form
     const [showDisburseForm, setShowDisburseForm] = useState(false);
     const [disbursementMethod, setDisbursementMethod] = useState('cash');
+
+    // Pool donors — shown when a source is selected in allocation form
+    const [poolDonors, setPoolDonors] = useState<Record<string, PoolDonor[]>>({});
+    const [loadingDonors, setLoadingDonors] = useState<Record<string, boolean>>({});
+
+    const fetchPoolDonors = async (source: string, poolId?: string) => {
+        const key = source === 'UNRESTRICTED' ? 'unrestricted' : poolId ?? '';
+        if (!key || poolDonors[key]) return; // already fetched
+
+        setLoadingDonors(prev => ({ ...prev, [key]: true }));
+        try {
+            const params = new URLSearchParams({ source });
+            if (poolId) params.set('poolId', poolId);
+            const res = await fetch(`/api/admin/pool-donors?${params}`);
+            const data = await res.json();
+            if (data.success) {
+                setPoolDonors(prev => ({ ...prev, [key]: data.data }));
+            }
+        } catch (err) {
+            console.error('Failed to fetch pool donors:', err);
+        } finally {
+            setLoadingDonors(prev => ({ ...prev, [key]: false }));
+        }
+    };
 
     useEffect(() => {
         if (authStatus !== 'authenticated' || session?.user?.role !== 'admin') {
@@ -258,6 +292,16 @@ export default function AdminRequestReviewPage() {
         const updated = [...allocations];
         updated[index] = { ...updated[index], [field]: value };
         setAllocations(updated);
+
+        // Fetch donors when source/pool changes
+        const entry = updated[index];
+        if (field === 'sourceType' && value === 'UNRESTRICTED') {
+            fetchPoolDonors('UNRESTRICTED');
+        } else if (field === 'poolId' && value && entry.sourceType === 'RESTRICTED') {
+            fetchPoolDonors('RESTRICTED', value);
+        } else if (field === 'sourceType' && value === 'RESTRICTED' && entry.poolId) {
+            fetchPoolDonors('RESTRICTED', entry.poolId);
+        }
     };
 
     const formatDate = (d: string) =>
@@ -634,7 +678,10 @@ export default function AdminRequestReviewPage() {
                                 )}
 
                                 <Button
-                                    onClick={() => setShowAllocateForm(true)}
+                                    onClick={() => {
+                                        setShowAllocateForm(true);
+                                        fetchPoolDonors('UNRESTRICTED');
+                                    }}
                                     disabled={actionLoading}
                                     className="w-full bg-green-600 hover:bg-green-700 text-white"
                                 >
@@ -841,6 +888,50 @@ export default function AdminRequestReviewPage() {
                                                 ))}
                                             </select>
                                         )}
+
+                                        {/* Donors list for selected source */}
+                                        {(() => {
+                                            const donorKey = alloc.sourceType === 'UNRESTRICTED' ? 'unrestricted' : alloc.poolId;
+                                            const donors = donorKey ? poolDonors[donorKey] : null;
+                                            const isLoading = donorKey ? loadingDonors[donorKey] : false;
+
+                                            if (alloc.sourceType === 'UNRESTRICTED' || (alloc.sourceType === 'RESTRICTED' && alloc.poolId)) {
+                                                return (
+                                                    <div className="rounded-lg border bg-white max-h-36 overflow-y-auto">
+                                                        <div className="px-3 py-1.5 bg-gray-100 border-b sticky top-0">
+                                                            <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                                                                Donors ({donors?.length ?? 0})
+                                                            </span>
+                                                        </div>
+                                                        {isLoading ? (
+                                                            <div className="p-3 text-center">
+                                                                <Loader2 size={14} className="animate-spin mx-auto text-gray-400" />
+                                                            </div>
+                                                        ) : donors && donors.length > 0 ? (
+                                                            <div className="divide-y">
+                                                                {donors.map(d => (
+                                                                    <div key={d.donationId} className="px-3 py-2 flex items-center justify-between text-xs">
+                                                                        <div className="min-w-0">
+                                                                            <p className="font-medium text-gray-800 truncate">{d.donorName}</p>
+                                                                            {!d.isAnonymous && (
+                                                                                <p className="text-gray-400 truncate">{d.email}</p>
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="text-right shrink-0 ml-3">
+                                                                            <p className="font-semibold text-gray-700">₱{d.remainingAmount.toLocaleString()}</p>
+                                                                            <p className="text-gray-400">of ₱{d.totalDonated.toLocaleString()}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        ) : (
+                                                            <p className="p-3 text-xs text-gray-400 text-center">No donors with available balance</p>
+                                                        )}
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        })()}
                                         <Input
                                             type="number"
                                             placeholder="Amount (₱)"
