@@ -82,6 +82,7 @@ interface RequestDetail {
     disbursed_amount: number | null;
     receipt_message: string | null;
     receipt_submitted_at: string | null;
+    receipt_status: 'PENDING' | 'COMPLETED' | 'MISSING';
     created_at: string;
     allocatedAmount: number;
     remainingToAllocate: number;
@@ -165,6 +166,30 @@ export default function AdminRequestReviewPage() {
     // Disbursement form
     const [showDisburseForm, setShowDisburseForm] = useState(false);
     const [disbursementMethod, setDisbursementMethod] = useState('cash');
+
+    // Receipt status
+    const [receiptStatusLoading, setReceiptStatusLoading] = useState(false);
+
+    const handleReceiptStatusUpdate = async (newStatus: 'PENDING' | 'COMPLETED' | 'MISSING') => {
+        setReceiptStatusLoading(true);
+        try {
+            const res = await fetch(`/api/admin/requests/${requestId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ receipt_status: newStatus }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setRequest(prev => prev ? { ...prev, receipt_status: newStatus } : prev);
+            } else {
+                alert(data.error || 'Failed to update receipt status');
+            }
+        } catch {
+            alert('Failed to update receipt status');
+        } finally {
+            setReceiptStatusLoading(false);
+        }
+    };
 
     // Pool donors — shown when a source is selected in allocation form
     const [poolDonors, setPoolDonors] = useState<Record<string, PoolDonor[]>>({});
@@ -519,9 +544,21 @@ export default function AdminRequestReviewPage() {
                         {/* Receipt / Liquidation / Thank You — shown after disbursement */}
                         {request.status === 'DISBURSED' && (
                             <div className="bg-white rounded-xl border p-6 shadow-sm">
-                                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                    <Receipt size={15} /> Receipt / Proof / Liquidation
-                                </h2>
+                                <div className="flex items-center justify-between mb-3">
+                                    <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                        <Receipt size={15} /> Receipt / Proof / Liquidation
+                                    </h2>
+                                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
+                                        request.receipt_status === 'COMPLETED'
+                                            ? 'bg-green-50 text-green-600 border border-green-200'
+                                            : request.receipt_status === 'MISSING'
+                                            ? 'bg-red-50 text-red-600 border border-red-200'
+                                            : 'bg-amber-50 text-amber-600 border border-amber-200'
+                                    }`}>
+                                        {request.receipt_status === 'COMPLETED' ? <CheckCircle2 size={12} /> : request.receipt_status === 'MISSING' ? <XCircle size={12} /> : <Clock size={12} />}
+                                        {request.receipt_status === 'COMPLETED' ? 'Completed' : request.receipt_status === 'MISSING' ? 'Missing' : 'Pending Review'}
+                                    </span>
+                                </div>
 
                                 {request.receipt_submitted_at ? (
                                     <div className="space-y-4">
@@ -578,6 +615,55 @@ export default function AdminRequestReviewPage() {
                                         <p className="text-xs text-gray-300 mt-1">They will be prompted to upload proof and a thank-you message.</p>
                                     </div>
                                 )}
+
+                                {/* Admin Receipt Status Actions */}
+                                <div className="mt-4 pt-4 border-t">
+                                    <p className="text-xs font-medium text-gray-500 mb-2">Update Receipt Status</p>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            size="sm"
+                                            onClick={() => handleReceiptStatusUpdate('COMPLETED')}
+                                            disabled={receiptStatusLoading || request.receipt_status === 'COMPLETED'}
+                                            className={`flex-1 text-xs ${
+                                                request.receipt_status === 'COMPLETED'
+                                                    ? 'bg-green-600 text-white cursor-default'
+                                                    : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'
+                                            }`}
+                                            variant={request.receipt_status === 'COMPLETED' ? 'default' : 'outline'}
+                                        >
+                                            {receiptStatusLoading ? <Loader2 size={12} className="animate-spin mr-1" /> : <CheckCircle2 size={12} className="mr-1" />}
+                                            Completed
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            onClick={() => handleReceiptStatusUpdate('PENDING')}
+                                            disabled={receiptStatusLoading || request.receipt_status === 'PENDING'}
+                                            className={`flex-1 text-xs ${
+                                                request.receipt_status === 'PENDING'
+                                                    ? 'bg-amber-500 text-white cursor-default'
+                                                    : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200'
+                                            }`}
+                                            variant={request.receipt_status === 'PENDING' ? 'default' : 'outline'}
+                                        >
+                                            {receiptStatusLoading ? <Loader2 size={12} className="animate-spin mr-1" /> : <Clock size={12} className="mr-1" />}
+                                            Pending
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            onClick={() => handleReceiptStatusUpdate('MISSING')}
+                                            disabled={receiptStatusLoading || request.receipt_status === 'MISSING'}
+                                            className={`flex-1 text-xs ${
+                                                request.receipt_status === 'MISSING'
+                                                    ? 'bg-red-600 text-white cursor-default'
+                                                    : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'
+                                            }`}
+                                            variant={request.receipt_status === 'MISSING' ? 'default' : 'outline'}
+                                        >
+                                            {receiptStatusLoading ? <Loader2 size={12} className="animate-spin mr-1" /> : <XCircle size={12} className="mr-1" />}
+                                            Missing
+                                        </Button>
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </div>

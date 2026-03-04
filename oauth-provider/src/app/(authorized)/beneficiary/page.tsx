@@ -263,17 +263,17 @@ export default function BeneficiaryDashboard() {
                                             </div>
                                             <p className="text-xs text-gray-400">
                                                 <span>{date}</span>
-                                                <span className="mx-1">â€¢</span>
+                                                <span className="mx-1">{'\u2022'}</span>
                                                 <span className="font-mono">{formatReqId(req.id, req.created_at)}</span>
                                                 {req.documents?.length > 0 && (
                                                     <>
-                                                        <span className="mx-1">â€¢</span>
+                                                        <span className="mx-1">{'\u2022'}</span>
                                                         <span>{req.documents.length} doc{req.documents.length > 1 ? 's' : ''}</span>
                                                     </>
                                                 )}
                                                 {daysLeft > 0 && (
                                                     <>
-                                                        <span className="mx-1">â€¢</span>
+                                                        <span className="mx-1">{'\u2022'}</span>
                                                         <span className={daysLeft <= 7 ? 'text-red-500 font-medium' : ''}>
                                                             needed in {daysLeft}d
                                                         </span>

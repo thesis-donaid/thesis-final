@@ -295,3 +295,68 @@ export async function PATCH(
         );
     }
 }
+
+
+// PUT - Update receipt status (admin review of beneficiary's proof/receipt)
+export async function PUT(
+    req: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user || session.user.role !== "admin") {
+            return NextResponse.json(
+                { success: false, error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
+        const { id } = await params;
+        const requestId = parseInt(id);
+        const body = await req.json();
+        const { receipt_status } = body;
+
+        const validStatuses = ["PENDING", "COMPLETED", "MISSING"];
+        if (!receipt_status || !validStatuses.includes(receipt_status)) {
+            return NextResponse.json(
+                { success: false, error: `Invalid receipt status. Must be one of: ${validStatuses.join(", ")}` },
+                { status: 400 }
+            );
+        }
+
+        const existing = await prisma.beneficiaryRequest.findUnique({
+            where: { id: requestId },
+        });
+
+        if (!existing) {
+            return NextResponse.json(
+                { success: false, error: "Request not found" },
+                { status: 404 }
+            );
+        }
+
+        if (existing.status !== "DISBURSED") {
+            return NextResponse.json(
+                { success: false, error: "Receipt status can only be set for disbursed requests" },
+                { status: 400 }
+            );
+        }
+
+        const updated = await prisma.beneficiaryRequest.update({
+            where: { id: requestId },
+            data: { receipt_status },
+        });
+
+        return NextResponse.json({
+            success: true,
+            message: `Receipt status updated to ${receipt_status.toLowerCase()}`,
+            data: updated,
+        });
+    } catch (error) {
+        console.error("Error updating receipt status:", error);
+        return NextResponse.json(
+            { success: false, error: "Failed to update receipt status" },
+            { status: 500 }
+        );
+    }
+}
