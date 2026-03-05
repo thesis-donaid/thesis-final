@@ -200,6 +200,12 @@ export default function DonorDashboard() {
                         <p className="text-sm text-gray-500 mt-1">Track your donations and impact</p>
                     </div>
                     <div className="flex items-center gap-3">
+                        <Link href="/donor/impacts">
+                            <Button variant="outline" className="flex items-center gap-2 border-gray-200 text-gray-600 hover:bg-gray-50">
+                                <Sparkles size={16} />
+                                Your Impact
+                            </Button>
+                        </Link>
                         <Link href="/donor/transactions">
                             <Button variant="outline" className="flex items-center gap-2 border-gray-200 text-gray-600 hover:bg-gray-50">
                                 <Receipt size={16} />
@@ -352,11 +358,20 @@ export default function DonorDashboard() {
                 {impactItems.length > 0 && (
                     <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                         <div className="px-6 py-5 border-b border-gray-100">
-                            <div className="flex items-center gap-2">
-                                <Sparkles className="w-5 h-5 text-amber-500" />
-                                <h2 className="text-lg font-bold text-gray-900">Your Impact</h2>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <Sparkles className="w-5 h-5 text-amber-500" />
+                                        <h2 className="text-lg font-bold text-gray-900">Your Impact</h2>
+                                    </div>
+                                    <p className="text-sm text-gray-500 mt-1">See how your donations are helping beneficiaries</p>
+                                </div>
+                                <Link href="/donor/impacts">
+                                    <Button variant="outline" className="text-xs border-gray-200 text-gray-500 hover:bg-gray-50">
+                                        View All
+                                    </Button>
+                                </Link>
                             </div>
-                            <p className="text-sm text-gray-500 mt-1">See how your donations are helping beneficiaries</p>
                         </div>
 
                         <div className="divide-y divide-gray-50">
