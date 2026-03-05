@@ -16,6 +16,7 @@ import {
     ChevronDown,
     ChevronUp,
     Sparkles,
+    Receipt,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -198,12 +199,20 @@ export default function DonorDashboard() {
                         </h1>
                         <p className="text-sm text-gray-500 mt-1">Track your donations and impact</p>
                     </div>
-                    <Link href="/donation">
-                        <Button className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 shadow-sm">
-                            <Plus size={16} />
-                            New Donation
-                        </Button>
-                    </Link>
+                    <div className="flex items-center gap-3">
+                        <Link href="/donor/transactions">
+                            <Button variant="outline" className="flex items-center gap-2 border-gray-200 text-gray-600 hover:bg-gray-50">
+                                <Receipt size={16} />
+                                Transaction History
+                            </Button>
+                        </Link>
+                        <Link href="/donation">
+                            <Button className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 shadow-sm">
+                                <Plus size={16} />
+                                New Donation
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
 
                 {error && (
