@@ -4,14 +4,18 @@
 import { signIn } from "next-auth/react";
 import Image from "next/image";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Lock, ArrowRight, Heart, Phone, User, Eye, EyeClosed } from "lucide-react";
+import { Lock, ArrowRight, Heart, Phone, User, Eye, EyeClosed, Mail } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import Link from "next/link";
 
 export default function LoginPage() {
+    const [loginMode, setLoginMode] = useState<"beneficiary" | "donor">("donor");
     const [beneficiaryLoading, setBeneficiaryLoading] = useState(false);
+    const [donorLoading, setDonorLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
     const [error, setError] = useState("");
     const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [currentSlide, setCurrentSlide] = useState(0);
@@ -116,6 +120,37 @@ export default function LoginPage() {
     const handleGoogleSignIn = async () => {
         setGoogleLoading(true);
         await signIn("google", { callbackUrl: "/dashboard" });
+    };
+
+    const handleDonorLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError("");
+        setDonorLoading(true);
+        try {
+            const res = await fetch('/api/auth/donor-login', {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                const errorMsg = data.error || "Login failed";
+                setError(errorMsg);
+                if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+                errorTimeoutRef.current = setTimeout(() => setError(""), 5000);
+                return;
+            }
+
+            window.location.href = "/";
+        } catch {
+            setError("An error occurred. Please try again.");
+            if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+            errorTimeoutRef.current = setTimeout(() => setError(""), 5000);
+        } finally {
+            setDonorLoading(false);
+        }
     };
 
     const handleBeneficiaryLogin = async (e: React.FormEvent) => {
@@ -236,15 +271,50 @@ export default function LoginPage() {
                                 </motion.h1>
                             </motion.div>
 
+                            {/* Login Mode Tabs */}
+                            <motion.div
+                                className="flex bg-gray-100 rounded-xl p-1 mb-6"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.25, duration: 0.5 }}
+                            >
+                                <button
+                                    type="button"
+                                    onClick={() => { setLoginMode("donor"); setError(""); }}
+                                    className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                                        loginMode === "donor"
+                                            ? "bg-white text-red-700 shadow-sm"
+                                            : "text-gray-500 hover:text-gray-700"
+                                    }`}
+                                >
+                                    Donor
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => { setLoginMode("beneficiary"); setError(""); }}
+                                    className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                                        loginMode === "beneficiary"
+                                            ? "bg-white text-red-700 shadow-sm"
+                                            : "text-gray-500 hover:text-gray-700"
+                                    }`}
+                                >
+                                    Beneficiary
+                                </button>
+                            </motion.div>
+
                             {/* Login Form */}
-                            <motion.form 
+                            <AnimatePresence mode="wait">
+                            {loginMode === "beneficiary" ? (
+                            <motion.form
+                                key="beneficiary-form" 
                                 onSubmit={handleBeneficiaryLogin} 
                                 className="space-y-5"
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3, duration: 0.6 }}
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                transition={{ duration: 0.3 }}
                             >
-                                <p>
+                                <p className="text-sm text-gray-500">
                                     Login as Beneficiary
                                 </p>
 
@@ -269,7 +339,7 @@ export default function LoginPage() {
 
                                 <div className="space-y-2">
                                     <div className="flex justify-between items-center">
-                                        <label htmlFor="password" className="text-sm font-medium text-gray-700 block">
+                                        <label htmlFor="ben-password" className="text-sm font-medium text-gray-700 block">
                                             Password
                                         </label>
                                         <motion.a 
@@ -284,7 +354,7 @@ export default function LoginPage() {
                                     <div className="relative group">
                                         <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-red-600 transition-colors" />
                                         <motion.input
-                                            id="password"
+                                            id="ben-password"
                                             type={showPassword ? "text" : "password"}
                                             placeholder="Enter your password"
                                             className="w-full pl-12 py-4 pr-12 border border-gray-200 focus:border-red-600 focus:ring-[3px] focus:ring-red-600/10 rounded-xl transition-all bg-white text-gray-900 font-medium placeholder-gray-400 outline-none"
@@ -315,6 +385,82 @@ export default function LoginPage() {
                                 >
                                     {beneficiaryLoading ? "Signing In..." : "Sign In"}
                                     {!beneficiaryLoading && <ArrowRight className="h-5 w-5" />}
+                                </motion.button>
+                            </motion.form>
+                            ) : (
+                            <motion.form
+                                key="donor-form"
+                                onSubmit={handleDonorLogin}
+                                className="space-y-5"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <p className="text-sm text-gray-500">
+                                    Login as Registered Donor
+                                </p>
+
+                                <div className="space-y-2">
+                                    <label htmlFor="email" className="text-sm font-medium text-gray-700 block">
+                                        Email
+                                    </label>
+                                    <div className="relative group">
+                                        <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-red-600 transition-colors" />
+                                        <motion.input
+                                            id="email"
+                                            type="email"
+                                            placeholder="Enter your email"
+                                            className="w-full pl-12 py-4 border border-gray-200 focus:border-red-600 focus:ring-[3px] focus:ring-red-600/10 rounded-xl transition-all bg-white text-gray-900 font-medium placeholder-gray-400 outline-none"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            required
+                                            whileFocus={{ scale: 1.01 }}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <div className="flex justify-between items-center">
+                                        <label htmlFor="donor-password" className="text-sm font-medium text-gray-700 block">
+                                            Password
+                                        </label>
+                                    </div>
+
+                                    <div className="relative group">
+                                        <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-red-600 transition-colors" />
+                                        <motion.input
+                                            id="donor-password"
+                                            type={showPassword ? "text" : "password"}
+                                            placeholder="Enter your password"
+                                            className="w-full pl-12 py-4 pr-12 border border-gray-200 focus:border-red-600 focus:ring-[3px] focus:ring-red-600/10 rounded-xl transition-all bg-white text-gray-900 font-medium placeholder-gray-400 outline-none"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            required
+                                            whileFocus={{ scale: 1.01 }}
+                                        />
+
+                                        <motion.button 
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-red-600 focus:outline-none transition-colors"
+                                            whileHover={{ scale: 1.1 }}
+                                            whileTap={{ scale: 0.9 }}
+                                        >
+                                            {showPassword ? <Eye size={20}/> : <EyeClosed size={20}/>}
+                                        </motion.button>
+                                    </div>
+                                </div>
+
+                                <motion.button
+                                    type="submit"
+                                    disabled={donorLoading}
+                                    className="w-full py-4 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white font-semibold rounded-xl transition-all duration-300 shadow-xl shadow-red-700/30 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    whileHover={{ scale: 1.02, boxShadow: "0 20px 40px -10px rgba(220, 38, 38, 0.4)" }}
+                                    whileTap={{ scale: 0.98 }}
+                                >
+                                    {donorLoading ? "Signing In..." : "Sign In"}
+                                    {!donorLoading && <ArrowRight className="h-5 w-5" />}
                                 </motion.button>
 
                                 {/* Divider */}
@@ -347,7 +493,18 @@ export default function LoginPage() {
                                     </span>
                                 </motion.button>
 
+                                
+                                <p className="w-full text-center">
+                                    Don&apos;t have an account yet? {" "}
+                                    <span>
+                                        <Link href={"/signup"} className="text-red-500 hover:underline"> 
+                                            Sign Up
+                                        </Link>
+                                    </span>
+                                </p>
                             </motion.form>
+                            )}
+                            </AnimatePresence>
 
                             {/* Mobile-only contact info */}
                             <motion.div 

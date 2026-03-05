@@ -33,6 +33,7 @@ model User {
   emailVerified DateTime?
   image String?
   name  String?
+  password String?
   // role: 'admin', 'beneficiary', 'registeredDonor', 'guestDonor'
   role String @default("guest_user") @db.VarChar(20)
   created_at DateTime @default(now())

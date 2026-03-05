@@ -8,6 +8,7 @@ import CredentialsProvider  from "next-auth/providers/credentials";
 import { generateOtp, sendOtpEmail } from "./email";
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
+import { compareHash } from "./bcrypt";
 
 
 export const authOptions: NextAuthOptions = {
@@ -90,6 +91,35 @@ export const authOptions: NextAuthOptions = {
                 return beneficiary.user;
             },
         }),
+        CredentialsProvider({
+            id: "donor-credentials",
+            name: "Donor Login",
+            credentials: {
+                email: { label: "Email", type: "email" },
+                password: { label: "Password", type: "password" },
+            },
+            async authorize(credentials) {
+                if (!credentials?.email || !credentials?.password) return null;
+
+                const user = await prisma.user.findFirst({
+                    where: {
+                        email: credentials.email,
+                        role: "registered",
+                    },
+                });
+
+                if(!user || !user.password) return null;
+
+                const isValidPassword = await bcrypt.compare(
+                    credentials.password,
+                    user.password
+                );
+
+                if (!isValidPassword) return null;
+
+                return user;
+            }
+        })
     ],
     session: {
         strategy: "database",

@@ -6,7 +6,6 @@ const PUBLIC_LINK = [
     label: 'Programs',
     children:[
         {href: '/program/misyonero', label: 'Misyonero', image: ''},
-        {href: '/program/binhi', label: 'Binhi'},
         {href: '/program/youthalive', label: 'Youth Alive'},
         {href: '/program/kids-activity', label: 'Kid\'s Activity'},
         {href: '/program/gap-year', label: 'Gap Year'}
