@@ -1,4 +1,4 @@
-import { Graduate, Programs } from "@/types/localdb";
+import { Graduate, Programs, StaffMember } from "@/types/localdb";
 import SetImageGoogleById from "@/utils/SetImageGoogleById";
 import { ArrowRight, Heart, Target, Eye, Sparkles, Users, BookOpen, Stethoscope, TreePine } from "lucide-react";
 
@@ -206,18 +206,69 @@ const AboutPage = () => {
     ]
 
     const image = [
-        { id: 1, image: SetImageGoogleById("") },
-        { id: 2, image: SetImageGoogleById("") },
-        { id: 3, image: SetImageGoogleById("") },
-        { id: 4, image: SetImageGoogleById("") },
-        { id: 5, image: SetImageGoogleById("") },
-        { id: 6, image: SetImageGoogleById("") },
-        { id: 7, image: SetImageGoogleById("") },
-        { id: 8, image: SetImageGoogleById("") },
-        { id: 9, image: SetImageGoogleById("") },
+        { id: 1, image: SetImageGoogleById("1xS-d9IfKvMsFP0VuhO4uH6MuskcqRqzq") },
+        { id: 2, image: SetImageGoogleById("1MpfHISqlBDviH1HJqkapbqrlvKRb9XT4") },
+        { id: 3, image: SetImageGoogleById("1ooXO5f-M-TWomZpzarTZbZT5wMsdVudz") },
+        { id: 4, image: SetImageGoogleById("1uwwKXIZ1BM_m4R400g4a88Smo-8X1IVs") },
+        { id: 5, image: SetImageGoogleById("1DJAFP9tPGQJURCTviM5Tb3y7m24PusyG") },
+        { id: 6, image: SetImageGoogleById("1Lon5Qf89QEJG0hiLBdijYAAxmDtg51dQ") },
+        { id: 7, image: SetImageGoogleById("1lZ9OgSlxEiKyPZ5gZvUTjZTgZK6sxzDw") },
     ]
+
 
     return {paragraph, image}
 }
 
-export { GraduateData, programs }
+
+
+
+
+const staffMembers: StaffMember[] = [
+    {
+        id: 1,
+        name: 'Father Paul Uwemedimo',
+        position: 'CEO & Founder',
+        department: 'Puso ng Ama Foundation.',
+        email: 'john.smith@company.com',
+        image: SetImageGoogleById('1aXYEjkrr6U_R5-a-1KFVJl-kBHLEJSQs'),
+        bio: 'John founded the company in 2015 with a vision to revolutionize the industry. With over 20 years of experience in leadership and business strategy, he guides our company toward continued growth and innovation.'
+    },
+    {
+        id: 2,
+        name: 'Sarah Johnson',
+        position: 'CTO',
+        department: 'Technology',
+        email: 'sarah.johnson@company.com',
+        image: SetImageGoogleById('1aXYEjkrr6U_R5-a-1KFVJl-kBHLEJSQs'),
+        bio: 'Sarah leads our technology team with expertise in software architecture and cloud infrastructure. She has a proven track record of delivering scalable solutions that drive business success.'
+    },
+    {
+        id: 3,
+        name: 'Mike Chen',
+        position: 'Lead Developer',
+        department: 'Engineering',
+        email: 'mike.chen@company.com',
+        image: SetImageGoogleById('1aXYEjkrr6U_R5-a-1KFVJl-kBHLEJSQs'),
+        bio: 'Mike is responsible for leading the development team and ensuring our products meet the highest quality standards. His technical expertise and leadership skills are invaluable to our engineering efforts.'
+    },
+    {
+        id: 4,
+        name: 'Emily Davis',
+        position: 'Marketing Director',
+        department: 'Marketing',
+        email: 'emily.davis@company.com',
+        image: SetImageGoogleById('1aXYEjkrr6U_R5-a-1KFVJl-kBHLEJSQs'),
+        bio: 'Emily develops and executes marketing strategies that have increased our brand awareness by over 200%. Her creative campaigns and data-driven approach deliver exceptional results.'
+    },
+    {
+        id: 5,
+        name: 'David Wilson',
+        position: 'HR Manager',
+        department: 'Human Resources',
+        email: 'david.wilson@company.com',
+        image: SetImageGoogleById('1aXYEjkrr6U_R5-a-1KFVJl-kBHLEJSQs'),
+        bio: 'David manages our talent acquisition and employee development programs, fostering a positive work culture. His initiatives have significantly improved employee satisfaction and retention.'
+    }
+];
+
+export { GraduateData, programs, staffMembers, AboutPage }

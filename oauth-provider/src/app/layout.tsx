@@ -21,7 +21,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: {
     default: "Puso Ng Ama Foundation Inc.",
-    template: "Puso Ng Ama Foundation Inc.",
+    template: "%s | Puso Ng Ama Foundation Inc.",
   },
   description: "Personal and social transformation of individuals, families, and communities through faith-driven action.",
 };

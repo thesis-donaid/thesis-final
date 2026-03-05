@@ -27,3 +27,13 @@ export interface Programs {
     icon: Icon;
     description: string;
 }
+
+export interface StaffMember {
+    id: number;
+    name: string;
+    position: string;
+    department: string;
+    email: string;
+    image: string;
+    bio: string;
+}
