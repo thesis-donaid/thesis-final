@@ -30,7 +30,6 @@ const ADMIN_LINKS = [
 
 const REGISTERD_LINKS = [
   { href: '/donor', label: 'Dashboard'},
-  { href: '/donor/allocated', label: 'Fund Allocation' },
   { href: '/donor/impacts', label: 'Impacts'},
   { href: '/donor/transactions', label: 'Transactions'}
 ]
