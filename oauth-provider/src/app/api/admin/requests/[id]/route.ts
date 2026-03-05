@@ -156,6 +156,15 @@ export async function PATCH(
 
             updateData.disbursed_at = new Date();
 
+            // Calculate total disbursed from allocations
+            const allocations = await prisma.allocation.findMany({
+                where: { requestId: requestId },
+            });
+
+            const totalDisbursed = allocations.reduce((sum, a) => sum + a.amount, 0);
+            updateData.disbursed_amount = totalDisbursed
+
+
             // Also mark all related allocations as disbursed
             await prisma.allocation.updateMany({
                 where: {

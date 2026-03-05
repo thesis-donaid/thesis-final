@@ -184,6 +184,27 @@ async function linkDonationsToAllocation(
                 }
             });
 
+            await tx.donation.update({
+                where: { id: donation.id },
+                data: {
+                    remaining_amount: { decrement: amountFromThisDonation },
+                }
+            })
+
+            const fullDonation = await tx.donation.findUnique({
+                where: { id: donation.id },
+                select: { registered_donor_id: true }
+            });
+
+            if (fullDonation?.registered_donor_id) {
+                await tx.registeredDonor.update({
+                    where: { id: fullDonation.registered_donor_id },
+                    data: {
+                        available_funds: { decrement: amountFromThisDonation }
+                    }
+                })
+            }
+
             linkedDonations.push({
                 donationId: donation.id,
                 amountUsed: amountFromThisDonation,
@@ -264,12 +285,18 @@ export async function createAllocation(
         // 4. Update request status to APPROVED
         const totalAllocated = data.allocations.reduce((sum, a) => sum + a.amount, 0);
 
+        // First ensure disbursed_amount is not null 
+        const currentRequest = await tx.beneficiaryRequest.findUnique({
+            where: { id: data.requestId },
+            select: { disbursed_amount: true }
+        })
+
         await tx.beneficiaryRequest.update({
             where: { id: data.requestId },
             data: {
                 status: "APPROVED",
                 reviewed_at: new Date(),
-                disbursed_amount: { increment: totalAllocated },
+                disbursed_amount: (currentRequest?.disbursed_amount ?? 0) + totalAllocated
             }
         });
         return allocations;
