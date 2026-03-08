@@ -1,47 +1,57 @@
 /**
  * POST /api/blockchain/record-proof
  *
- * Records a donation proof on the Polygon blockchain.
- * Called by the admin after a beneficiary submits their proof/receipt.
+ * Records a donation proof on the blockchain.
+ * This is a standalone endpoint — the primary trigger is through
+ * PUT /api/admin/requests/[id] when receipt_status = COMPLETED.
  *
  * Request body:
  * {
- *   donationId: string,       // Donation reference code
- *   allocationId: string,     // Allocation ID
- *   beneficiaryId: string,    // Beneficiary identifier
- *   amount: number,           // Amount in PHP
- *   purpose: string,          // What the funds were used for
- *   proofHash: string,        // IPFS hash or URL of receipt
- *   proofType: string,        // "receipt" | "liquidation_report" | "thank_you_letter"
+ *   donationIds: string[],          // Donation reference codes
+ *   allocationId: string,           // Allocation ID
+ *   beneficiaryId: string,          // Beneficiary identifier
+ *   registeredDonorIds: number[],   // Registered donor DB IDs
+ *   guestDonorIds: number[],        // Guest donor DB IDs
+ *   amount: number,                 // Amount in PHP
+ *   purpose: string,                // What the funds were used for
+ *   disbursementReceiptUrl: string, // URL of disbursement receipt
+ *   proofUrl: string,               // URL of beneficiary's proof
+ *   proofHash: string,              // Hash of the proof document
+ *   proofType: string,              // "receipt" | "liquidation_report" | "thank_you_letter"
  * }
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { recordProofOnChain } from "@/blockchain/service";
-import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    // Validate required fields
-    const { donationId, allocationId, beneficiaryId, amount, purpose, proofHash, proofType } = body;
+    const {
+      donationIds, allocationId, beneficiaryId,
+      registeredDonorIds, guestDonorIds,
+      amount, purpose, disbursementReceiptUrl, proofUrl, proofHash, proofType,
+    } = body;
 
-    if (!donationId || !allocationId || !beneficiaryId || !amount || !purpose || !proofHash) {
+    if (!donationIds?.length || !allocationId || !beneficiaryId || !amount || !purpose) {
       return NextResponse.json(
         { success: false, error: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    // Record on blockchain
     const result = await recordProofOnChain({
-      donationId,
+      donationIds,
       allocationId: String(allocationId),
       beneficiaryId: String(beneficiaryId),
+      registeredDonorIds: registeredDonorIds || [],
+      guestDonorIds: guestDonorIds || [],
       amount: Number(amount),
       purpose,
-      proofHash,
+      disbursementReceiptUrl: disbursementReceiptUrl || "",
+      proofUrl: proofUrl || "",
+      proofHash: proofHash || proofUrl || "",
       proofType: proofType || "receipt",
     });
 
@@ -51,17 +61,6 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-
-    // Update the donation record in your database with the blockchain info
-    await prisma.donation.update({
-      where: { reference_code: donationId },
-      data: {
-        blockchain_txt_hash: result.transactionHash,
-        blockchain_network: process.env.BLOCKCHAIN_NETWORK || "amoy",
-        blockchain_status: "confirmed",
-        blockchain_saved_at: new Date(),
-      },
-    });
 
     return NextResponse.json({
       success: true,

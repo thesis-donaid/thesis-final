@@ -2,6 +2,7 @@ import { getAvailableFunds } from "@/lib/allocation";
 import { authOptions } from "@/lib/auth";
 import { sendDisbursementNotificationEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
+import { recordProofOnChain } from "@/blockchain/service";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -355,6 +356,86 @@ export async function PUT(
             where: { id: requestId },
             data: { receipt_status },
         });
+
+        // When receipt is marked COMPLETED, record proof on blockchain
+        if (receipt_status === "COMPLETED") {
+            const fullRequest = await prisma.beneficiaryRequest.findUnique({
+                where: { id: requestId },
+                include: {
+                    beneficiary: true,
+                    receipts: { orderBy: { uploaded_at: "desc" } },
+                    allocations: {
+                        include: {
+                            donationAllocations: {
+                                include: { donation: true },
+                            },
+                        },
+                    },
+                },
+            });
+
+            if (fullRequest) {
+                // Get proof document URLs
+                const proofUrl = fullRequest.receipts[0]?.file_url || "";
+                const disbursementReceiptUrl = fullRequest.receipts.length > 1
+                    ? fullRequest.receipts[1]?.file_url || ""
+                    : "";
+
+                // Record one blockchain proof per allocation
+                for (const allocation of fullRequest.allocations) {
+                    // Collect all donation IDs and donor IDs for this allocation
+                    const donationIds: string[] = [];
+                    const registeredDonorIds: number[] = [];
+                    const guestDonorIds: number[] = [];
+
+                    for (const da of allocation.donationAllocations) {
+                        donationIds.push(da.donation.reference_code);
+                        if (da.donation.registered_donor_id) {
+                            registeredDonorIds.push(da.donation.registered_donor_id);
+                        }
+                        if (da.donation.guest_donor_id) {
+                            guestDonorIds.push(da.donation.guest_donor_id);
+                        }
+                    }
+
+                    if (donationIds.length === 0) continue;
+
+                    const result = await recordProofOnChain({
+                        donationIds,
+                        allocationId: String(allocation.id),
+                        beneficiaryId: String(fullRequest.beneficiaryId),
+                        registeredDonorIds,
+                        guestDonorIds,
+                        amount: allocation.amount,
+                        purpose: fullRequest.purpose,
+                        disbursementReceiptUrl,
+                        proofUrl,
+                        proofHash: proofUrl, // Using URL as hash for now
+                        proofType: "receipt",
+                    });
+
+                    if (result.success) {
+                        // Update all donations linked to this allocation
+                        for (const da of allocation.donationAllocations) {
+                            await prisma.donation.update({
+                                where: { id: da.donation.id },
+                                data: {
+                                    blockchain_txt_hash: result.transactionHash,
+                                    blockchain_network: process.env.BLOCKCHAIN_NETWORK || "sepolia",
+                                    blockchain_status: "confirmed",
+                                    blockchain_saved_at: new Date(),
+                                },
+                            });
+                        }
+                    } else {
+                        console.error(
+                            `[Blockchain] Failed to record proof for allocation ${allocation.id}:`,
+                            result.error
+                        );
+                    }
+                }
+            }
+        }
 
         return NextResponse.json({
             success: true,

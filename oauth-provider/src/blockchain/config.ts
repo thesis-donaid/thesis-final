@@ -10,6 +10,15 @@
 // ============================================
 
 export const BLOCKCHAIN_CONFIG = {
+  // Sepolia Testnet (for development)
+  sepolia: {
+    chainId: 11155111,
+    name: "Sepolia Testnet",
+    rpcUrl: process.env.SEPOLIA_RPC_URL || "https://rpc.sepolia.org",
+    blockExplorer: "https://sepolia.etherscan.io",
+    currency: "ETH",
+    contractAddress: process.env.DONATION_PROOF_CONTRACT_ADDRESS_SEPOLIA || "",
+  },
   // Polygon Amoy Testnet (for development)
   amoy: {
     chainId: 80002,
@@ -34,7 +43,7 @@ export const BLOCKCHAIN_CONFIG = {
 export type NetworkName = keyof typeof BLOCKCHAIN_CONFIG;
 
 export const ACTIVE_NETWORK: NetworkName =
-  (process.env.BLOCKCHAIN_NETWORK as NetworkName) || "amoy";
+  (process.env.BLOCKCHAIN_NETWORK as NetworkName) || "sepolia";
 
 export function getActiveConfig() {
   return BLOCKCHAIN_CONFIG[ACTIVE_NETWORK];

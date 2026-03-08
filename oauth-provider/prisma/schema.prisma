@@ -424,3 +424,37 @@ model DonationAllocation {
   @@unique([allocationId, donationId])
   @@map("donation_allocations")
 }
+
+// ============================================
+// Blockchain Ledger
+// ============================================
+model BlockchainLedger {
+  id Int @id @default(autoincrement())
+  
+}
+
+
+// ============================================
+// Generate Report
+// ============================================
+
+model GeneratedReport {
+  id String @id @default(cuid())
+  
+  start_date DateTime
+  end_date DateTime
+
+  total_beneficiary_requests Int
+  
+  // Format: [{ pool_id, pool_name, previous_amount, current_amount, allocated_amount, total_remaining, difference }]
+  pool_statistics Json 
+
+  // Summary stats: donations_count, donations_amount, disbursed_count, disbursed_amount, requests_by_status
+  summary Json?
+  
+  generated_by String 
+  
+  created_at DateTime @default(now())
+  
+  @@map("generated_reports")
+}

@@ -25,6 +25,7 @@ const ADMIN_LINKS = [
   { href: '/admin', label: 'Dashboard' },
   { href: '/admin/pools',  label: 'Pool' },
   { href: '/admin/users', label: 'Users' },
+  { href: '/admin/reports', label: "Reports" },
 
 ]
 

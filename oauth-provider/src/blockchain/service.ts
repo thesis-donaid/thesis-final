@@ -19,26 +19,36 @@ import { getActiveConfig, getExplorerTxUrl } from "./config";
 // ============================================
 
 export interface RecordProofParams {
-  donationId: string;
+  donationIds: string[];
   allocationId: string;
   beneficiaryId: string;
+  registeredDonorIds: number[];
+  guestDonorIds: number[];
   /** Amount in PHP (e.g., 500.00) — will be converted to centavos on-chain */
   amount: number;
   currency?: string;
   purpose: string;
-  /** IPFS hash or URL of the receipt/proof document */
+  /** URL of the disbursement receipt (admin side) */
+  disbursementReceiptUrl: string;
+  /** URL of the beneficiary's uploaded proof/receipt */
+  proofUrl: string;
+  /** SHA-256 hash of the proof document for integrity */
   proofHash: string;
   /** Type of proof: "receipt", "liquidation_report", "thank_you_letter" */
   proofType: string;
 }
 
 export interface OnChainProof {
-  donationId: string;
+  donationIds: string[];
   allocationId: string;
   beneficiaryId: string;
+  registeredDonorIds: number[];
+  guestDonorIds: number[];
   amount: number;
   currency: string;
   purpose: string;
+  disbursementReceiptUrl: string;
+  proofUrl: string;
   proofHash: string;
   proofType: string;
   recordedAt: Date;
@@ -120,24 +130,8 @@ function getWriteContract(): ethers.Contract {
 /**
  * Record a donation proof on the blockchain.
  *
- * Call this from your API route after a beneficiary uploads their receipt/proof.
- *
- * @example
- * ```ts
- * // In your API route (e.g., /api/proof/record)
- * const result = await recordProofOnChain({
- *   donationId: "DON-REF-001",
- *   allocationId: "1",
- *   beneficiaryId: "BEN-001",
- *   amount: 500.00,
- *   purpose: "School supplies for Scholar A",
- *   proofHash: "QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco",
- *   proofType: "receipt",
- * });
- *
- * // result.transactionHash → save to your database
- * // result.explorerUrl → show to user for verification
- * ```
+ * Called when admin marks receipt_status = COMPLETED.
+ * Records one proof per allocation, linking all associated donations and donors.
  */
 export async function recordProofOnChain(
   params: RecordProofParams
@@ -150,12 +144,16 @@ export async function recordProofOnChain(
     const amountInCentavos = Math.round(params.amount * 100);
 
     const tx = await contract.recordProof(
-      params.donationId,
+      params.donationIds,
       params.allocationId,
       params.beneficiaryId,
+      params.registeredDonorIds,
+      params.guestDonorIds,
       amountInCentavos,
       params.currency || "PHP",
       params.purpose,
+      params.disbursementReceiptUrl,
+      params.proofUrl,
       params.proofHash,
       params.proofType
     );
@@ -184,75 +182,36 @@ export async function recordProofOnChain(
   }
 }
 
-/**
- * Record multiple proofs in a single transaction (saves gas).
- */
-export async function recordProofBatchOnChain(
-  proofs: RecordProofParams[]
-): Promise<RecordProofResult> {
-  try {
-    const contract = getWriteContract();
-
-    const tx = await contract.recordProofBatch(
-      proofs.map((p) => p.donationId),
-      proofs.map((p) => p.allocationId),
-      proofs.map((p) => p.beneficiaryId),
-      proofs.map((p) => Math.round(p.amount * 100)),
-      proofs.map((p) => p.currency || "PHP"),
-      proofs.map((p) => p.purpose),
-      proofs.map((p) => p.proofHash),
-      proofs.map((p) => p.proofType)
-    );
-
-    const receipt = await tx.wait(1);
-
-    return {
-      success: true,
-      transactionHash: receipt.hash,
-      blockNumber: receipt.blockNumber,
-      explorerUrl: getExplorerTxUrl(receipt.hash),
-      gasUsed: receipt.gasUsed.toString(),
-    };
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Unknown blockchain error";
-    console.error("[Blockchain] Failed to record batch proof:", message);
-    return {
-      success: false,
-      transactionHash: "",
-      blockNumber: 0,
-      explorerUrl: "",
-      gasUsed: "0",
-      error: message,
-    };
-  }
-}
-
 // ============================================
 // READ FUNCTIONS (Anyone can call)
 // ============================================
 
 /**
- * Get a proof from the blockchain by donation ID.
- * This is what donors use to verify their contribution.
+ * Get a proof from the blockchain by allocation ID.
+ * This is what donors/public use to verify funds were used properly.
  */
 export async function getProofFromChain(
-  donationId: string
+  allocationId: string
 ): Promise<OnChainProof | null> {
   try {
     const contract = getReadContract();
 
-    const exists = await contract.hasProof(donationId);
+    const exists = await contract.hasProof(allocationId);
     if (!exists) return null;
 
-    const proof = await contract.getProof(donationId);
+    const proof = await contract.getProof(allocationId);
 
     return {
-      donationId,
-      allocationId: proof.allocationId,
+      donationIds: proof.donationIds,
+      allocationId,
       beneficiaryId: proof.beneficiaryId,
+      registeredDonorIds: proof.registeredDonorIds.map((id: bigint) => Number(id)),
+      guestDonorIds: proof.guestDonorIds.map((id: bigint) => Number(id)),
       amount: Number(proof.amount) / 100, // Convert centavos back to PHP
       currency: proof.currency,
       purpose: proof.purpose,
+      disbursementReceiptUrl: proof.disbursementReceiptUrl,
+      proofUrl: proof.proofUrl,
       proofHash: proof.proofHash,
       proofType: proof.proofType,
       recordedAt: new Date(Number(proof.recordedAt) * 1000),
@@ -264,12 +223,12 @@ export async function getProofFromChain(
 }
 
 /**
- * Check if a donation already has a proof recorded on-chain.
+ * Check if an allocation already has a proof recorded on-chain.
  */
-export async function hasProofOnChain(donationId: string): Promise<boolean> {
+export async function hasProofOnChain(allocationId: string): Promise<boolean> {
   try {
     const contract = getReadContract();
-    return await contract.hasProof(donationId);
+    return await contract.hasProof(allocationId);
   } catch (error) {
     console.error("[Blockchain] Failed to check proof:", error);
     return false;

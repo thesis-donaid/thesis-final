@@ -1,0 +1,1 @@
+// POST: Specific endpoint for PDF generation

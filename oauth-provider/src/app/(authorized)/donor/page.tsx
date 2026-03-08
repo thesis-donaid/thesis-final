@@ -6,7 +6,6 @@ import {
     Heart,
     CheckCircle2,
     Clock,
-    DollarSign,
     Plus,
     AlertTriangle,
     Target,
@@ -17,6 +16,7 @@ import {
     ChevronUp,
     Sparkles,
     Receipt,
+    Wallet
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -152,7 +152,7 @@ export default function DonorDashboard() {
             value: `₱${stats.totalAvailable.toLocaleString()}`,
             sub: 'Remaining funds',
             subColor: 'text-teal-500',
-            icon: DollarSign,
+            icon: Wallet,
             iconBg: 'bg-teal-50',
             iconColor: 'text-teal-500',
         },
