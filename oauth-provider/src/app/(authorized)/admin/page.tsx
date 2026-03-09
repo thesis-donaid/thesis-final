@@ -19,6 +19,7 @@ interface Request {
     status: string;
     urgency_level: string;
     created_at: string;
+    receipt_status: string;
     beneficiary: {
         firstName: string;
         lastName: string;
@@ -55,7 +56,13 @@ const statusConfig: Record<string, { label: string; className: string }> = {
     REJECTED:     { label: 'rejected',     className: 'bg-red-50 text-red-600 border border-red-100' },
 };
 
-type Tab = 'pending' | 'approved' | 'all';
+const receiptStatusConfig: Record<string, { label: string; className: string }> = {
+    COMPLETED: { label: 'completed', className: 'bg-green-50 text-green-600 border border-green-100' },
+    PENDING: { label: 'pending', className: 'bg-amber-50 text-amber-600 border border-amber-100' },
+    MISSING: { label: 'missing', className: 'bg-red-50 text-red-600 border border-red-100' }, 
+}
+
+type Tab = 'pending' | 'approved' | 'all' | 'completed';
 
 function formatReqId(id: number, createdAt: string) {
     const year = new Date(createdAt).getFullYear();
@@ -97,6 +104,7 @@ export default function AdminDashboard() {
 
                 const pendingCount = allRequests.filter(r => r.status === 'PENDING' || r.status === 'UNDER_REVIEW').length;
                 const approvedCount = allRequests.filter(r => r.status === 'APPROVED').length;
+                
                 const totalAllocations = allRequests.filter(r => r.allocations && r.allocations.length > 0).length;
                 const totalDisbursed = statsData.stats?.totalDisbursed ?? 0;
                 const availableFunds = statsData.stats?.availableFunds ?? 0;
@@ -115,6 +123,7 @@ export default function AdminDashboard() {
     const filteredRequests = requests.filter(r => {
         if (activeTab === 'pending') return r.status === 'PENDING' || r.status === 'UNDER_REVIEW';
         if (activeTab === 'approved') return r.status === 'APPROVED' || r.status === 'ALLOCATED';
+        if (activeTab === 'completed') return r.receipt_status === "COMPLETED";
         return true;
     });
 
@@ -173,6 +182,7 @@ export default function AdminDashboard() {
         { key: 'pending',  label: `Pending (${pendingCount})` },
         { key: 'approved', label: `Approved (${approvedCount})` },
         { key: 'all',      label: 'All Requests' },
+        { key: 'completed', label: 'Completed' },
     ];
 
     if (loading) {
@@ -250,6 +260,7 @@ export default function AdminDashboard() {
                             filteredRequests.map((req) => {
                                 const urgency = urgencyConfig[req.urgency_level] ?? urgencyConfig.LOW;
                                 const statusBadge = statusConfig[req.status] ?? statusConfig.PENDING;
+                                const receiptStatus = receiptStatusConfig[req.receipt_status] ?? receiptStatusConfig.MISSING;
                                 const programName = req.allocations?.[0]?.pool?.name ?? null;
                                 const date = new Date(req.created_at).toLocaleDateString('en-US', {
                                     month: '2-digit', day: '2-digit', year: 'numeric'
@@ -267,6 +278,9 @@ export default function AdminDashboard() {
                                                 </span>
                                                 <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${urgency.className}`}>
                                                     {urgency.label}
+                                                </span>
+                                                <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${receiptStatus.className}`}>
+                                                    {receiptStatus.label}
                                                 </span>
                                             </div>
                                             <p className="text-sm text-gray-600 line-clamp-1">{req.purpose}</p>

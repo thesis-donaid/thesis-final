@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
           payment_fee: paymentFee > 0 ? paymentFee : null,
           net_amount: finalNetAmount,
           paid_at: new Date(),
-          remaining_amount: existingDonation.amount
+          remaining_amount: finalNetAmount
         },
         include: {
           guestDonor: true,
