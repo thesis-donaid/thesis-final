@@ -78,6 +78,7 @@ export async function GET() {
 
         const completedDonations = donations.filter(d => d.status === "completed");
         const pendingDonations   = donations.filter(d => d.status === "pending" || d.status === "processing");
+        
 
         // Calculate allocation stats
         const totalAllocated = completedDonations.reduce((sum, d) => {

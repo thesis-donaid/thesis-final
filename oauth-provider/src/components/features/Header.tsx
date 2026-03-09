@@ -21,7 +21,7 @@ export default function Header(){
     const [activeLogoutDropdown, setActiveLogoutDropdown] = useState(false);
     const logoutDropdownRef = useRef<HTMLDivElement>(null);
     const [switchMode, setSwitchMode] = useState<boolean>(() => {
-        const authPrefixes = ['/beneficiary', '/admin', '/donor', '/profile', '/settings'];
+        const authPrefixes = ['/beneficiary', '/admin', '/donor', '/profile'];
         if (authPrefixes.some(prefix => pathname.startsWith(prefix))) {
             return true;
         }
@@ -47,7 +47,7 @@ export default function Header(){
     if (prevPathname !== pathname) {
         setPrevPathname(pathname);
 
-        const authPrefixes = ['/beneficiary', '/admin', '/donor', '/profile', '/settings'];
+        const authPrefixes = ['/beneficiary', '/admin', '/donor', '/profile'];
         const isAuthSection = authPrefixes.some(prefix => pathname.startsWith(prefix));
 
         if (isAuthSection) {
@@ -341,15 +341,6 @@ export default function Header(){
                                         Profile
                                     </Link>
 
-                                    <Link
-                                        href="/settings"
-                                        className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-                                        role="menuitem"
-                                        onClick={() => setActiveLogoutDropdown(false)}
-                                    >
-                                        <Settings className="w-4 h-4" />
-                                        Settings
-                                    </Link>
 
                                     <div className="border-t border-gray-100 my-2"></div>
 

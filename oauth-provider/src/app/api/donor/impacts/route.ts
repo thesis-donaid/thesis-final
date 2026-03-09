@@ -110,6 +110,37 @@ export async function GET() {
                     );
                 }, 0);
 
+                // Collect blockchain data from donations linked to this request
+                const blockchainProofs: {
+                    allocationId: number;
+                    txHash: string;
+                    network: string;
+                    status: string;
+                    savedAt: string;
+                    donationReferenceCode: string;
+                }[] = [];
+
+                for (const d of donations) {
+                    for (const a of d.donationAllocations) {
+                        if (
+                            a.allocation.request?.id === req.id &&
+                            d.blockchain_txt_hash
+                        ) {
+                            // Avoid duplicate entries for the same allocation
+                            if (!blockchainProofs.some((p) => p.allocationId === a.allocation.id)) {
+                                blockchainProofs.push({
+                                    allocationId: a.allocation.id,
+                                    txHash: d.blockchain_txt_hash,
+                                    network: d.blockchain_network ?? "",
+                                    status: d.blockchain_status ?? "",
+                                    savedAt: d.blockchain_saved_at?.toISOString() ?? "",
+                                    donationReferenceCode: d.reference_code,
+                                });
+                            }
+                        }
+                    }
+                }
+
                 impactItems.push({
                     requestId: req.id,
                     purpose: req.purpose,
@@ -144,6 +175,7 @@ export async function GET() {
                         fileType: r.file_type,
                         uploadedAt: r.uploaded_at.toISOString(),
                     })),
+                    blockchainProofs,
                 });
             }
         }

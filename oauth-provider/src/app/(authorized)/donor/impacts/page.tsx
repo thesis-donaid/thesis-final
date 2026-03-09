@@ -27,6 +27,8 @@ import {
     BadgeCheck,
     Banknote,
     ClipboardList,
+    ShieldCheck,
+    Link2,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -36,6 +38,15 @@ interface ImpactFile {
     fileUrl: string;
     fileType: string;
     uploadedAt: string;
+}
+
+interface BlockchainProof {
+    allocationId: number;
+    txHash: string;
+    network: string;
+    status: string;
+    savedAt: string;
+    donationReferenceCode: string;
 }
 
 interface ImpactItem {
@@ -60,6 +71,7 @@ interface ImpactItem {
     updatedAt: string;
     documents: ImpactFile[];
     receipts: ImpactFile[];
+    blockchainProofs: BlockchainProof[];
 }
 
 const requestStatusConfig: Record<string, { label: string; className: string }> = {
@@ -79,6 +91,17 @@ const urgencyConfig: Record<string, { label: string; className: string }> = {
 type SortField = 'date' | 'amount' | 'status';
 type SortDir = 'asc' | 'desc';
 const ITEMS_PER_PAGE = 8;
+
+const EXPLORER_URLS: Record<string, string> = {
+    sepolia: 'https://sepolia.etherscan.io',
+    amoy: 'https://amoy.polygonscan.com',
+    polygon: 'https://polygonscan.com',
+};
+
+function getExplorerTxUrl(txHash: string, network: string): string {
+    const base = EXPLORER_URLS[network] || EXPLORER_URLS.sepolia;
+    return `${base}/tx/${txHash}`;
+}
 
 export default function DonorImpactsPage() {
     const { status: authStatus } = useSession();
@@ -318,6 +341,14 @@ export default function DonorImpactsPage() {
                                     color="emerald"
                                 />
                             )}
+                            {selectedItem.blockchainProofs.length > 0 && (
+                                <TimelineItem
+                                    label="Recorded on Blockchain"
+                                    date={selectedItem.blockchainProofs[0].savedAt ? formatDateTime(selectedItem.blockchainProofs[0].savedAt) : ''}
+                                    active
+                                    color="emerald"
+                                />
+                            )}
                             {selectedItem.status === 'DISBURSED' && !selectedItem.receiptSubmittedAt && (
                                 <TimelineItem
                                     label="Awaiting receipt from beneficiary"
@@ -368,6 +399,63 @@ export default function DonorImpactsPage() {
                                 {selectedItem.receipts.map((r) => (
                                     <FileCard key={r.id} file={r} color="indigo" />
                                 ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Blockchain Verification */}
+                    {selectedItem.blockchainProofs.length > 0 && (
+                        <div className="bg-emerald-50/50 rounded-2xl border border-emerald-200 shadow-sm p-6">
+                            <div className="flex items-center gap-2 mb-4">
+                                <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                                <h3 className="text-sm font-semibold text-emerald-800">Blockchain Verification</h3>
+                                <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
+                                    On-chain
+                                </span>
+                            </div>
+                            <p className="text-xs text-emerald-700/70 mb-4">
+                                This disbursement has been permanently recorded on the blockchain for full transparency and auditability.
+                            </p>
+                            <div className="space-y-3">
+                                {selectedItem.blockchainProofs.map((proof) => {
+                                    const explorerUrl = getExplorerTxUrl(proof.txHash, proof.network);
+                                    return (
+                                        <div key={proof.allocationId} className="bg-white rounded-xl border border-emerald-100 p-4 space-y-3">
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div className="space-y-1.5 min-w-0 flex-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                                                            {proof.status === 'confirmed' ? '✓ Confirmed' : proof.status}
+                                                        </span>
+                                                        <span className="text-[11px] text-gray-400 capitalize">{proof.network}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <Link2 className="w-3 h-3 text-gray-400 shrink-0" />
+                                                        <span className="text-xs font-mono text-gray-600 truncate" title={proof.txHash}>
+                                                            {proof.txHash.slice(0, 10)}...{proof.txHash.slice(-8)}
+                                                        </span>
+                                                    </div>
+                                                    {proof.savedAt && (
+                                                        <p className="text-[11px] text-gray-400">
+                                                            Recorded {formatDateTime(proof.savedAt)}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                {explorerUrl && (
+                                                    <a
+                                                        href={explorerUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg border border-emerald-200 transition-colors shrink-0"
+                                                    >
+                                                        <ExternalLink className="w-3.5 h-3.5" />
+                                                        View on Explorer
+                                                    </a>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
@@ -540,6 +628,12 @@ export default function DonorImpactsPage() {
                                                                 {item.receipts.length} receipt{item.receipts.length !== 1 ? 's' : ''}
                                                             </span>
                                                         )}
+                                                        {item.blockchainProofs.length > 0 && (
+                                                            <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1">
+                                                                <ShieldCheck className="w-3 h-3" />
+                                                                On-chain
+                                                            </span>
+                                                        )}
                                                     </div>
                                                     <p className="text-xs text-gray-400">
                                                         <User className="w-3 h-3 inline mr-1" />
@@ -570,6 +664,12 @@ export default function DonorImpactsPage() {
                                                     <span className="flex items-center gap-1">
                                                         <FileText className="w-3 h-3" />
                                                         {item.documents.length} doc{item.documents.length !== 1 ? 's' : ''}
+                                                    </span>
+                                                )}
+                                                {item.blockchainProofs.length > 0 && (
+                                                    <span className="flex items-center gap-1 text-emerald-600">
+                                                        <ShieldCheck className="w-3 h-3" />
+                                                        Verified on-chain
                                                     </span>
                                                 )}
                                             </div>
