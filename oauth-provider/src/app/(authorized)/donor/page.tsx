@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { statusConfig } from '@/lib/status';
 
 interface Donation {
     id: number;

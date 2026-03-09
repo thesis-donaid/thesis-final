@@ -8,3 +8,6 @@ const statusConfig: Record<string, { label: string; className: string }> = {
     failed:     { label: 'Failed',     className: 'bg-red-50 text-red-600 border border-red-100' },
     refunded:   { label: 'Refunded',   className: 'bg-gray-50 text-gray-500 border border-gray-100' },
 };
+
+
+export { statusConfig }
