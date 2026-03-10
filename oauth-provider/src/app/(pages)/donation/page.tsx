@@ -150,7 +150,7 @@ export default function DonationPage() {
     const canProceed = (): boolean => {
         switch (currentStep) {
             case 1: return !!formData.donation_type;
-            case 2: return formData.amount >= 20;
+            case 2: return formData.amount >= 1;
             case 3: return !!formData.email;
             case 4: return !!formData.payment_method;
             case 5: return true;
@@ -407,17 +407,17 @@ export default function DonationPage() {
                                             value={formData.amount || ""}
                                             onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })}
                                             type="number" 
-                                            min={20}
+                                            min={1}
                                             className="bg-gray-50 border border-gray-200 h-14 pl-10 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-300 font-bold text-xl"
                                             placeholder="Enter amount"
                                         />
                                     </div>
-                                    {formData.amount > 0 && formData.amount < 20 && (
-                                        <p className="text-xs text-red-500 font-medium mt-1">Minimum donation amount is ₱20</p>
+                                    {formData.amount <= 0 && (
+                                        <p className="text-xs text-red-500 font-medium mt-1">Minimum donation amount must not be &apos;0&apos;</p>
                                     )}
                                 </div>
 
-                                {formData.amount >= 20 && (
+                                {formData.amount >= 1 && (
                                     <motion.div
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
