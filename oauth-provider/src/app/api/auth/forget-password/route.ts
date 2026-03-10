@@ -24,10 +24,9 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ message: "If an account with that email exists, a reset link has been sent." });
         }
 
-        // Invalidate any existing unused tokens for this user
-        await prisma.passwordResetToken.updateMany({
+        // Delete any existing unused tokens for this user (so only the latest token works)
+        await prisma.passwordResetToken.deleteMany({
             where: { userId: user.id, used: false },
-            data: { used: true },
         });
 
         // Generate a secure token
@@ -46,7 +45,12 @@ export async function POST(req: NextRequest) {
         const baseUrl = process.env.NEXTAUTH_URL || `https://${req.headers.get("host")}`;
         const resetUrl = `${baseUrl}/reset-password?token=${token}`;
 
-        await sendPasswordResetEmail(normalizedEmail, resetUrl);
+        try {
+            await sendPasswordResetEmail(normalizedEmail, resetUrl);
+            console.log(`Password reset flow completed for user: ${user.id}`);
+        } catch (emailError) {
+            console.error(`Email sending failed for ${normalizedEmail}:`, emailError);
+        }
 
         return NextResponse.json({ message: "If an account with that email exists, a reset link has been sent." });
     } catch (error) {
