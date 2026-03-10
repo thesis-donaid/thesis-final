@@ -36,23 +36,32 @@ function ResetPasswordForm() {
         setLoading(true);
 
         try {
+            console.log("[Reset Password] Submitting reset request with token:", token?.substring(0, 10) + "...");
+            
             const res = await fetch("/api/auth/reset-password", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ token, password }),
             });
-
+            
+            console.log("[Reset Password] Response status:", res.status);
+            
             const data = await res.json();
+            
+            console.log("[Reset Password] Response data:", data);
 
             if (!res.ok) {
                 setError(data.error || "Something went wrong.");
+                setLoading(false);
                 return;
             }
 
+            console.log("[Reset Password] Password reset successful!");
             setSuccess(true);
-        } catch {
+            setLoading(false);
+        } catch (err) {
+            console.error("[Reset Password] Error:", err);
             setError("An error occurred. Please try again.");
-        } finally {
             setLoading(false);
         }
     };

@@ -376,7 +376,7 @@ export default function DonationPage() {
                             >
                                 <div className="mb-8">
                                     <h2 className="text-2xl font-black text-gray-900 mb-2">Set Your Amount</h2>
-                                    <p className="text-gray-500 text-sm">Choose a preset amount or enter a custom value. Minimum ₱20.</p>
+                                    <p className="text-gray-500 text-sm">Choose a preset amount or enter a custom value. No Minimum Amount.</p>
                                 </div>
 
                                 <div className="grid grid-cols-3 gap-3 mb-6">

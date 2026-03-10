@@ -16,9 +16,9 @@ export async function POST(req: NextRequest) {
         const { email, amount, donation_type, pool_id, message, is_anonymous, payment_method } = body;
 
         // Validation
-        if(!amount || amount < 20) {
+        if(!amount || amount <= 0) {
             return NextResponse.json(
-                { error: "Email and amount (min ₱20) required" },
+                { error: "Amount must not be \"0\"" },
                 { status: 400 }
             );
         }
