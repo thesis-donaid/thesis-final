@@ -425,6 +425,13 @@ export default function LoginPage() {
                                         <label htmlFor="donor-password" className="text-sm font-medium text-gray-700 block">
                                             Password
                                         </label>
+                                        <motion.a 
+                                            href="/forgot-password" 
+                                            className="text-sm text-red-600 hover:text-red-800 hover:underline font-medium"
+                                            whileHover={{ x: 2 }}
+                                        >
+                                            Forgot Password?
+                                        </motion.a>
                                     </div>
 
                                     <div className="relative group">

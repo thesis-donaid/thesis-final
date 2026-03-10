@@ -44,6 +44,26 @@ export async function sendOtpEmail(email: string, code: string) {
     });
 }
 
+export async function sendPasswordResetEmail(email: string, resetUrl: string) {
+    await transporter.sendMail({
+        from: process.env.EMAIL_FROM,
+        to: email,
+        subject: `${ORG_NAME} - Reset Your Password`,
+        html: wrapEmailHtml(`
+            <h2>Password Reset Request</h2>
+            <p>We received a request to reset the password for your account.</p>
+            <p>Click the button below to set a new password:</p>
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="${resetUrl}" style="display: inline-block; padding: 14px 32px; background: #dc2626; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                    Reset Password
+                </a>
+            </div>
+            <p style="font-size: 13px; color: #6b7280;">This link expires in <strong>1 hour</strong>. If you did not request a password reset, you can safely ignore this email.</p>
+            <p style="font-size: 12px; color: #9ca3af; word-break: break-all;">If the button doesn't work, copy and paste this URL: ${resetUrl}</p>
+        `),
+    });
+}
+
 export function generateOtp(): string {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
@@ -234,3 +254,4 @@ export async function sendReceiptNotificationEmail(params: ReceiptNotificationPa
     html: wrapEmailHtml(bodyHtml),
   });
 }
+

@@ -43,6 +43,7 @@ model User {
   accounts Account[]
   sessions Session[]
   otpCodes OtpCode[]
+  passwordResetTokens PasswordResetToken[]
   registeredDonor RegisteredDonor?
   beneficiary Beneficiary?
   createdPools Pool[]
@@ -97,6 +98,19 @@ model OtpCode {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model PasswordResetToken {
+  id String @id @default(cuid())
+  token String @unique
+  userId String
+  expires DateTime
+  used Boolean @default(false)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("password_reset_tokens")
 }
 
 
