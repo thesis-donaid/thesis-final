@@ -24,6 +24,7 @@ interface BeneficiaryRequest {
     status: string;
     created_at: string;
     allocatedAmount?: number;
+    receipt_Status: string;
     documents: { id: number }[];
 }
 
@@ -40,6 +41,12 @@ const statusConfig: Record<string, { label: string; className: string }> = {
     REJECTED:     { label: 'Rejected',     className: 'bg-red-50 text-red-600 border border-red-100' },
     DISBURSED:    { label: 'Disbursed',    className: 'bg-gray-50 text-gray-600 border border-gray-100' },
 };
+
+const receiptStatusConfig: Record<string, { label: string; className: string }> = {
+    COMPLETED: { label: 'completed', className: 'bg-green-50 text-green-600 border border-green-100' },
+    PENDING: { label: 'pending', className: 'bg-amber-50 text-amber-600 border border-amber-100' },
+    MISSING: { label: 'missing', className: 'bg-red-50 text-red-600 border border-red-100' }, 
+}
 
 type Tab = 'active' | 'approved' | 'all';
 
@@ -244,6 +251,7 @@ export default function BeneficiaryDashboard() {
                             filteredRequests.map((req) => {
                                 const urgency     = urgencyConfig[req.urgency_level] ?? urgencyConfig.LOW;
                                 const statusBadge = statusConfig[req.status] ?? statusConfig.PENDING;
+                                const receiptStatus = receiptStatusConfig[req.receipt_Status] ?? receiptStatusConfig.MISSING;
                                 const daysLeft    = Math.ceil((new Date(req.date_needed).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
                                 const date        = new Date(req.created_at).toLocaleDateString('en-US', {
                                     month: '2-digit', day: '2-digit', year: 'numeric',
@@ -259,6 +267,9 @@ export default function BeneficiaryDashboard() {
                                                 </span>
                                                 <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${urgency.className}`}>
                                                     {urgency.label}
+                                                </span>
+                                                <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${receiptStatus.className}`}>
+                                                    {receiptStatus.label}
                                                 </span>
                                             </div>
                                             <p className="text-xs text-gray-400">

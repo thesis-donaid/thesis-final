@@ -236,7 +236,7 @@ model BeneficiaryRequest {
   // Receipt / Liquidation / Thank-you (post-disbursement)
   receipt_message String? @db.Text  // Beneficiary's thank-you / comment to donors
   receipt_submitted_at DateTime?     // When the receipt was submitted
-  receipt_status ReceiptStatus @default(PENDING) // Admin review: PENDING, COMPLETED, MISSING
+  receipt_status ReceiptStatus @default(MISSING) // Admin review: PENDING, COMPLETED, MISSING
 
   // Timestamps
   created_at DateTime @default(now())

@@ -27,6 +27,7 @@ interface BeneficiaryRequest {
     disbursed_amount?: number;
     disbursed_at?: string;
     documents: Document[];
+    receipt_status: string;
     beneficiary?: {
         firstName?: string;
         lastName?: string;
@@ -53,6 +54,12 @@ const URGENCY_COLORS: Record<string, string> = {
     MEDIUM: "bg-orange-100 text-orange-800",
     HIGH: "bg-red-100 text-red-800",
 };
+
+const RECEIPT_STATUS_COLORS: Record<string, string> = {
+    COMPLETED: 'bg-green-100 text-green-800',
+    PENDING: 'bg-yellow-100 text-yellow-800',
+    MISSING: '',
+}
 
 export default function RequestList({ requests, isAdmin, onRefresh }: RequestListProps) {
     const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -161,6 +168,10 @@ export default function RequestList({ requests, isAdmin, onRefresh }: RequestLis
                                 <span className={`px-2 py-0.5 rounded text-xs font-medium ${URGENCY_COLORS[request.urgency_level]}`}>
                                     {request.urgency_level}
                                 </span>
+                                <span className={`px-2 py-0.5 rounded text-xs font-medium ${RECEIPT_STATUS_COLORS[request.receipt_status]}`}>
+                                    {request.receipt_status}
+                                </span>
+
                             </div>
                             <p className="text-gray-700">{request.purpose}</p>
                             <p className="text-sm text-gray-500">
