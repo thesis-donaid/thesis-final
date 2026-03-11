@@ -6,6 +6,9 @@ import { recordProofOnChain } from "@/blockchain/service";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
+// Allow this route up to 60 seconds for blockchain transactions
+// Vercel Hobby = 10s (default), Pro = 60s max
+export const maxDuration = 60;
 
 export async function GET(
     req: NextRequest,
@@ -357,22 +360,89 @@ export async function PUT(
             data: { receipt_status },
         });
 
-        // ============================================
-        // BLOCKCHAIN RECORDING - Fire & Forget Pattern
-        // ============================================
         // When receipt is marked COMPLETED, record proof on blockchain
-        // Don't await - let it run in background. Vercel will try to complete it.
         if (receipt_status === "COMPLETED") {
-            // Start blockchain recording without awaiting
-            // This immediately returns the response while blockchain processes
-            recordBlockchainInBackground(requestId).catch((error) => {
-                console.error(`[Blockchain BG] Failed to record proof for request ${requestId}:`, error);
+            const fullRequest = await prisma.beneficiaryRequest.findUnique({
+                where: { id: requestId },
+                include: {
+                    beneficiary: true,
+                    receipts: { orderBy: { uploaded_at: "desc" } },
+                    allocations: {
+                        include: {
+                            donationAllocations: {
+                                include: { donation: true },
+                            },
+                        },
+                    },
+                },
             });
+
+            if (fullRequest) {
+                // Get proof document URLs
+                const proofUrl = fullRequest.receipts[0]?.file_url || "";
+                const disbursementReceiptUrl = fullRequest.receipts.length > 1
+                    ? fullRequest.receipts[1]?.file_url || ""
+                    : "";
+
+                // Record one blockchain proof per allocation
+                for (const allocation of fullRequest.allocations) {
+                    // Collect all donation IDs and donor IDs for this allocation
+                    const donationIds: string[] = [];
+                    const registeredDonorIds: number[] = [];
+                    const guestDonorIds: number[] = [];
+
+                    for (const da of allocation.donationAllocations) {
+                        donationIds.push(da.donation.reference_code);
+                        if (da.donation.registered_donor_id) {
+                            registeredDonorIds.push(da.donation.registered_donor_id);
+                        }
+                        if (da.donation.guest_donor_id) {
+                            guestDonorIds.push(da.donation.guest_donor_id);
+                        }
+                    }
+
+                    if (donationIds.length === 0) continue;
+
+                    const result = await recordProofOnChain({
+                        donationIds,
+                        allocationId: String(allocation.id),
+                        beneficiaryId: String(fullRequest.beneficiaryId),
+                        registeredDonorIds,
+                        guestDonorIds,
+                        amount: allocation.amount,
+                        purpose: fullRequest.purpose,
+                        disbursementReceiptUrl,
+                        proofUrl,
+                        proofHash: proofUrl, // Using URL as hash for now
+                        proofType: "receipt",
+                    });
+
+                    if (result.success) {
+                        // Update all donations linked to this allocation
+                        for (const da of allocation.donationAllocations) {
+                            await prisma.donation.update({
+                                where: { id: da.donation.id },
+                                data: {
+                                    blockchain_txt_hash: result.transactionHash,
+                                    blockchain_network: process.env.BLOCKCHAIN_NETWORK || "sepolia",
+                                    blockchain_status: "confirmed",
+                                    blockchain_saved_at: new Date(),
+                                },
+                            });
+                        }
+                    } else {
+                        console.error(
+                            `[Blockchain] Failed to record proof for allocation ${allocation.id}:`,
+                            result.error
+                        );
+                    }
+                }
+            }
         }
 
         return NextResponse.json({
             success: true,
-            message: `Receipt status updated to ${receipt_status.toLowerCase()}. Blockchain recording in progress...`,
+            message: `Receipt status updated to ${receipt_status.toLowerCase()}`,
             data: updated,
         });
     } catch (error) {
@@ -380,133 +450,6 @@ export async function PUT(
         return NextResponse.json(
             { success: false, error: "Failed to update receipt status" },
             { status: 500 }
-        );
-    }
-}
-
-/**
- * Background function to record blockchain proofs
- * Runs independently of the HTTP response - doesn't block API
- * Errors are logged but don't affect the user's response
- */
-async function recordBlockchainInBackground(requestId: number): Promise<void> {
-    try {
-        console.log(`[Blockchain BG] 🟢 Starting background recording for request ${requestId}`);
-
-        const fullRequest = await prisma.beneficiaryRequest.findUnique({
-            where: { id: requestId },
-            include: {
-                beneficiary: true,
-                receipts: { orderBy: { uploaded_at: "desc" } },
-                allocations: {
-                    include: {
-                        donationAllocations: {
-                            include: { donation: true },
-                        },
-                    },
-                },
-            },
-        });
-
-        if (!fullRequest) {
-            console.warn(`[Blockchain BG] ⚠️ Request ${requestId} not found`);
-            return;
-        }
-
-        // Get proof document URLs
-        const proofUrl = fullRequest.receipts[0]?.file_url || "";
-        const disbursementReceiptUrl = fullRequest.receipts.length > 1
-            ? fullRequest.receipts[1]?.file_url || ""
-            : "";
-
-        console.log(`[Blockchain BG] 📋 Processing ${fullRequest.allocations.length} allocation(s)`);
-
-        let successCount = 0;
-        let failureCount = 0;
-
-        // Record one blockchain proof per allocation
-        for (const allocation of fullRequest.allocations) {
-            try {
-                // Collect all donation IDs and donor IDs for this allocation
-                const donationIds: string[] = [];
-                const registeredDonorIds: number[] = [];
-                const guestDonorIds: number[] = [];
-
-                for (const da of allocation.donationAllocations) {
-                    donationIds.push(da.donation.reference_code);
-                    if (da.donation.registered_donor_id) {
-                        registeredDonorIds.push(da.donation.registered_donor_id);
-                    }
-                    if (da.donation.guest_donor_id) {
-                        guestDonorIds.push(da.donation.guest_donor_id);
-                    }
-                }
-
-                if (donationIds.length === 0) {
-                    console.log(`[Blockchain BG] ⏭️ Skipping allocation ${allocation.id} - no donations`);
-                    continue;
-                }
-
-                console.log(
-                    `[Blockchain BG] 🔗 Recording allocation ${allocation.id} (${donationIds.length} donations, ₱${allocation.amount})`
-                );
-
-                const result = await recordProofOnChain({
-                    donationIds,
-                    allocationId: String(allocation.id),
-                    beneficiaryId: String(fullRequest.beneficiaryId),
-                    registeredDonorIds,
-                    guestDonorIds,
-                    amount: allocation.amount,
-                    purpose: fullRequest.purpose,
-                    disbursementReceiptUrl,
-                    proofUrl,
-                    proofHash: proofUrl, // Using URL as hash for now
-                    proofType: "receipt",
-                });
-
-                if (result.success) {
-                    console.log(
-                        `[Blockchain BG] ✅ Success for allocation ${allocation.id} | TX: ${result.transactionHash}`
-                    );
-                    successCount++;
-
-                    // Update all donations linked to this allocation
-                    for (const da of allocation.donationAllocations) {
-                        await prisma.donation.update({
-                            where: { id: da.donation.id },
-                            data: {
-                                blockchain_txt_hash: result.transactionHash,
-                                blockchain_network: process.env.BLOCKCHAIN_NETWORK || "sepolia",
-                                blockchain_status: "confirmed",
-                                blockchain_saved_at: new Date(),
-                            },
-                        });
-                    }
-
-                    console.log(`[Blockchain BG] 📝 Updated ${allocation.donationAllocations.length} donation(s) with TX hash`);
-                } else {
-                    console.error(
-                        `[Blockchain BG] ❌ Failed for allocation ${allocation.id}: ${result.error}`
-                    );
-                    failureCount++;
-                }
-            } catch (allocationError) {
-                console.error(
-                    `[Blockchain BG] 💥 Error processing allocation ${allocation.id}:`,
-                    allocationError instanceof Error ? allocationError.message : String(allocationError)
-                );
-                failureCount++;
-            }
-        }
-
-        console.log(
-            `[Blockchain BG] 🎉 Completed for request ${requestId} | Success: ${successCount} | Failed: ${failureCount}`
-        );
-    } catch (error) {
-        console.error(
-            `[Blockchain BG] 💥 CRITICAL: Request ${requestId}:`,
-            error instanceof Error ? error.message : String(error)
         );
     }
 }
