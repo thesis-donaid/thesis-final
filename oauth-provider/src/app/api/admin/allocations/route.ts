@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
                 if (!donor.isAnonymous) {
                     try {
                         await sendAllocationNotificationEmail({
-                            to: donor.email,
+                            to: donor.email!,
                             donorName: donor.donorName,
                             amountUsed: donor.amountUsed,
                             purpose: donor.requestPurpose,
