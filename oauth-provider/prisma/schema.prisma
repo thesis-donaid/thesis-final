@@ -319,7 +319,7 @@ model Donation {
 
 
   // Donation details
-  email String
+  email String?
   amount Float
   currency String @default("PHP")
   donation_type String @db.VarChar(20) // restricted or unrestricted

@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
             currency: body.currency || 'PHP',
             description: body.description || 'Donation',
             statement_descriptor: body.statement_descriptor || 'DONATION',
-            payment_method_allowed: ['gcash', 'paymaya'],
+            payment_method_allowed: ['gcash', 'paymaya', 'card'],
             metadata: {
                 donation_amount: String(body.amount),
                 created_at: new Date().toISOString()

@@ -58,28 +58,36 @@ const PAYMENT_METHODS = [
         name: "GCash", 
         icon: Smartphone,
         color: "bg-blue-500",
-        description: "Pay with your GCash wallet"
+        description: "Pay with your GCash wallet",
+        fee: "2%-2.5% transaction fee",
+        fees: 0.025
     },
     { 
         id: "paymaya", 
         name: "Maya", 
         icon: CreditCard,
         color: "bg-green-500",
-        description: "Pay with your Maya account"
+        description: "Pay with your Maya account",
+        fee: "1%-2% transaction fee",
+        fees: 0.02
     },
     { 
         id: "qrph", 
         name: "QR Ph", 
         icon: QrCode,
         color: "bg-purple-500",
-        description: "Scan QR code to pay"
+        description: "Scan QR code to pay",
+        fee: "1%-1.5% transaction fee",
+        fees: 0.015
     },
     { 
-        id: "paypal", 
-        name: "PayPal", 
+        id: "card", 
+        name: "Credit Card", 
         icon: Globe,
         color: "bg-indigo-500",
-        description: "Pay with PayPal"
+        description: "Pay with Card",
+        fee: "3%-3.5% + ₱13-₱15 transaction fee",
+        fees: 0.035
     },
 ];
 
@@ -97,7 +105,7 @@ export default function DonationPage() {
         donation_type: "unrestricted",
         pool_id: "",
         message: "",
-        is_anonymous: false,
+        is_anonymous: true,
         payment_method: "",
     });
 
@@ -151,7 +159,7 @@ export default function DonationPage() {
         switch (currentStep) {
             case 1: return !!formData.donation_type;
             case 2: return formData.amount >= 1;
-            case 3: return !!formData.email;
+            case 3: return !formData.email || !!formData.email;
             case 4: return !!formData.payment_method;
             case 5: return true;
             default: return false;
@@ -451,7 +459,8 @@ export default function DonationPage() {
                                     <div className="space-y-2">
                                         <Label className="text-sm font-bold text-gray-700 flex items-center">
                                             <Mail className="w-4 h-4 mr-2 text-red-500" />
-                                            Email Address
+                                            Email Address 
+                                            <span className="text-gray-400 font-normal ml-1">(Optional)</span>
                                         </Label>
                                         <Input 
                                             value={formData.email}
@@ -549,6 +558,7 @@ export default function DonationPage() {
                                                 <div>
                                                     <h3 className="font-bold text-gray-900">{method.name}</h3>
                                                     <p className="text-xs text-gray-500">{method.description}</p>
+                                                    <p className="text-xs text-red-500">{method.fee}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -605,6 +615,14 @@ export default function DonationPage() {
                                             <span className="text-sm text-gray-500">Payment Method</span>
                                             <span className="text-sm font-bold text-gray-900">
                                                 {PAYMENT_METHODS.find(m => m.id === formData.payment_method)?.name || "—"}
+                                            </span>
+                                        </div>
+                                        <div className="border-t border-gray-200" />
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-sm text-gray-500">Transaction fee</span>
+                                            <span className="text-sm font-bold text-red-500">
+                                                - ({((PAYMENT_METHODS.find(m => m.id === formData.payment_method)?.fees || 0) * 100).toFixed(1)}%) &nbsp;
+                                                ₱{((PAYMENT_METHODS.find(m => m.id === formData.payment_method)?.fees || 0) * formData.amount).toFixed(2)}
                                             </span>
                                         </div>
                                         {formData.message && (

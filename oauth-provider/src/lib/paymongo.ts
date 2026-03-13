@@ -23,10 +23,11 @@ interface CreatePaymentIntentParams {
 // Map user-selected payment method to PayMongo payment_method_types
 function getPaymentMethodTypes(method?: string): string[] {
     const methodMap: Record<string, string[]> = {
+        card: ["card"],
         gcash: ["gcash"],
         paymaya: ["paymaya"],
         qrph: ["qrph"],
-        paypal: ["card", "gcash", "paymaya", "qrph"], // PayPal not natively supported, show all options
+      
     };
     return methodMap[method || ""] || ["card", "qrph", "gcash", "paymaya"];
 }

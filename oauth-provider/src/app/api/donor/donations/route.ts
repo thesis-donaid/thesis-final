@@ -85,7 +85,7 @@ export async function GET() {
             const allocated = d.donationAllocations.reduce((s, da) => s + da.amount_used, 0);
             return sum + allocated;
         }, 0);
-        const totalDonated = completedDonations.reduce((s, d) => s + d.amount, 0);
+        const totalDonated = completedDonations.reduce((s, d) => s + (d.net_amount ?? 0), 0);
         const totalAvailable = totalDonated - totalAllocated;
 
         // Build impact/allocation tracking data for donor
