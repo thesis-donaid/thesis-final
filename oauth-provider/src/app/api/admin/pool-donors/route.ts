@@ -81,7 +81,7 @@ export async function GET(req: NextRequest) {
                 ? "Anonymous"
                 : d.registeredDonor?.name
                     ?? d.registeredDonor?.user?.name
-                    ?? d.email.split("@")[0];
+                    ?? d.email?.split("@")[0];
 
             return {
                 donationId: d.id,

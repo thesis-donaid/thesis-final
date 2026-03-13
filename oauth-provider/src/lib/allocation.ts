@@ -208,7 +208,7 @@ async function linkDonationsToAllocation(
             linkedDonations.push({
                 donationId: donation.id,
                 amountUsed: amountFromThisDonation,
-                donorEmail: donation.email
+                donorEmail: donation.email!
             });
 
             remainingToAllocate -= amountFromThisDonation;
