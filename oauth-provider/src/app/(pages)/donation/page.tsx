@@ -27,6 +27,8 @@ import {
     Gift,
     Target,
     Sparkles,
+
+    Copy,
 } from "lucide-react";
 
 type Pool = {
@@ -98,6 +100,7 @@ export default function DonationPage() {
     const [error, setError] = useState("");
     const [response, setResponse] = useState<DonationResponse | null>(null);
     const [pools, setPools] = useState<Pool[]>([]);
+    const [copied, setCopied] = useState(false);
     
     const [formData, setFormData] = useState({
         email: "",
@@ -207,6 +210,17 @@ export default function DonationPage() {
             setError("Failed to connect to API");
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(response?.reference_code || "");
+            setCopied(true);
+            // Reset the icon back to the copy icon after 2 seconds
+            setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+            console.error("Failed to copy text: ", err);
         }
     };
 
@@ -320,7 +334,7 @@ export default function DonationPage() {
                                         <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mb-4">
                                             <Gift className="w-6 h-6 text-red-600" />
                                         </div>
-                                        <h3 className="font-bold text-gray-900 mb-1">Unrestricted Donation</h3>
+                                        <h3 className="font-bold text-gray-900 mb-1">General Funds</h3>
                                         <p className="text-xs text-gray-500 leading-relaxed">
                                             Your donation will be allocated where it is needed the most by the foundation.
                                         </p>
@@ -342,7 +356,7 @@ export default function DonationPage() {
                                         <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mb-4">
                                             <Target className="w-6 h-6 text-red-600" />
                                         </div>
-                                        <h3 className="font-bold text-gray-900 mb-1">Restricted Donation</h3>
+                                        <h3 className="font-bold text-gray-900 mb-1">Program Funds</h3>
                                         <p className="text-xs text-gray-500 leading-relaxed">
                                             Choose a specific program or cause for your donation to support directly.
                                         </p>
@@ -588,8 +602,8 @@ export default function DonationPage() {
                                             <span className="text-sm text-gray-500">Donation Type</span>
                                             <span className="text-sm font-bold text-gray-900 capitalize">
                                                 {formData.donation_type === "restricted"
-                                                    ? `Restricted — ${toTitleCase(pools.find(p => p.id === formData.pool_id)?.name || "")}`
-                                                    : "Unrestricted"
+                                                    ? `Program — ${toTitleCase(pools.find(p => p.id === formData.pool_id)?.name || "")}`
+                                                    : "General Funds"
                                                 }
                                             </span>
                                         </div>
@@ -601,7 +615,7 @@ export default function DonationPage() {
                                         <div className="border-t border-gray-200" />
                                         <div className="flex justify-between items-center">
                                             <span className="text-sm text-gray-500">Email</span>
-                                            <span className="text-sm font-bold text-gray-900">{formData.email}</span>
+                                            <span className="text-sm font-bold text-gray-900">{formData.email || "Not applicable"}</span>
                                         </div>
                                         <div className="border-t border-gray-200" />
                                         <div className="flex justify-between items-center">
@@ -646,7 +660,7 @@ export default function DonationPage() {
                                                 </div>
                                                 <span className="font-bold text-gray-900">Total Donation</span>
                                             </div>
-                                            <span className="text-3xl font-black text-red-600">₱{formData.amount.toLocaleString()}</span>
+                                            <span className="text-3xl font-black text-red-600">₱{(formData.amount - ((PAYMENT_METHODS.find(m => m.id === formData.payment_method)?.fees || 0) * formData.amount)).toLocaleString()}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -756,7 +770,23 @@ export default function DonationPage() {
                             </p>
                             
                             <div className="bg-slate-50 rounded-2xl p-6 mb-8 border border-slate-100">
-                                <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest block mb-2">Reference Code</span>
+                                <div className="flex justify-between items-center">
+
+                                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest block mb-2">Reference Code</span>
+                                    <button
+                                        onClick={handleCopy}
+                                        className=" hover:bg-slate-100 rounded-full transition-colors"
+                                        title="Copy to clipboard"
+                                    >
+                                        {copied ? (
+                                            <Check className="w-5 text-green-500" />
+                                            ) : (
+                                            <Copy className="w-5 text-slate-500" />
+                                        )}
+                                        
+
+                                    </button>
+                                </div>
                                 <code className="text-2xl font-black text-red-600 tracking-tighter">{response.reference_code}</code>
                             </div>
 

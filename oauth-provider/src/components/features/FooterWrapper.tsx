@@ -6,7 +6,7 @@ import Footer from "./Footer";
 export default function FooterWrapper() {
   const pathname = usePathname();
 
-  const hiddenRoutes = ["/login", "/signup", "/auth/verify", "/beneficiary", "/donor", "/admin", "/unauthorized"];
+  const hiddenRoutes = ["/login", "/signup", "/auth/verify", "/beneficiary", "/donor", "/admin", "/unauthorized", "/donation"];
 
   // Check if the current pathname starts with any of the hidden routes
 
