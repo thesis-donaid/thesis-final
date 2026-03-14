@@ -89,7 +89,8 @@ const PAYMENT_METHODS = [
         color: "bg-indigo-500",
         description: "Pay with Card",
         fee: "3%-3.5% + ₱13-₱15 transaction fee",
-        fees: 0.035
+        fees: 0.035,
+        extraFee: 15,
     },
 ];
 
@@ -101,6 +102,7 @@ export default function DonationPage() {
     const [response, setResponse] = useState<DonationResponse | null>(null);
     const [pools, setPools] = useState<Pool[]>([]);
     const [copied, setCopied] = useState(false);
+    const [total, setTotal] = useState();
     
     const [formData, setFormData] = useState({
         email: "",
@@ -475,6 +477,7 @@ export default function DonationPage() {
                                             <Mail className="w-4 h-4 mr-2 text-red-500" />
                                             Email Address 
                                             <span className="text-gray-400 font-normal ml-1">(Optional)</span>
+                                            <p className="italic font-light text-gray-400">— Want to know your donation flow?</p>
                                         </Label>
                                         <Input 
                                             value={formData.email}
@@ -635,8 +638,18 @@ export default function DonationPage() {
                                         <div className="flex justify-between items-center">
                                             <span className="text-sm text-gray-500">Transaction fee</span>
                                             <span className="text-sm font-bold text-red-500">
-                                                - ({((PAYMENT_METHODS.find(m => m.id === formData.payment_method)?.fees || 0) * 100).toFixed(1)}%) &nbsp;
-                                                ₱{((PAYMENT_METHODS.find(m => m.id === formData.payment_method)?.fees || 0) * formData.amount).toFixed(2)}
+                                                - ({(() => {
+                                                    const method = PAYMENT_METHODS.find(m => m.id === formData.payment_method);
+                                                    const feePercent = ((method?.fees || 0) * 100).toFixed(1);
+                                                    return `${feePercent}%${method?.id === "card" ? ` + ₱${method.extraFee}` : ""}`;
+                                                })()}) &nbsp;
+                                                ₱{(() => {
+                                                    const method = PAYMENT_METHODS.find(m => m.id === formData.payment_method);
+                                                    const feeAmount = (method?.fees || 0) * formData.amount;
+                                                    const extraFee = method?.id === "card" ? method.extraFee || 0 : 0;
+                                                    return (feeAmount + extraFee).toFixed(2);
+                                                })()}
+                                                
                                             </span>
                                         </div>
                                         {formData.message && (
@@ -660,7 +673,15 @@ export default function DonationPage() {
                                                 </div>
                                                 <span className="font-bold text-gray-900">Total Donation</span>
                                             </div>
-                                            <span className="text-3xl font-black text-red-600">₱{(formData.amount - ((PAYMENT_METHODS.find(m => m.id === formData.payment_method)?.fees || 0) * formData.amount)).toLocaleString()}</span>
+                                            <span className="text-3xl font-black text-red-600">
+                                                ₱{(() => {
+                                                    const method = PAYMENT_METHODS.find(m => m.id === formData.payment_method);
+                                                    const feeAmount = (method?.fees || 0) * formData.amount;
+                                                    const extraFee = method?.id === "card" ? method.extraFee || 0 : 0;
+                                                    const total = formData.amount - feeAmount - extraFee;
+                                                    return total.toLocaleString();
+                                                })()}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>

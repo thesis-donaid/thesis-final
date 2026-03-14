@@ -284,6 +284,8 @@ export default function AdminRequestReviewPage() {
                 notifyBeneficiary,
             };
 
+            console.log(payload);
+
             const res = await fetch('/api/admin/allocations', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

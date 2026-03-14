@@ -1,6 +1,8 @@
-import { Graduate, Programs, StaffMember } from "@/types/localdb";
+import { Graduate, StaffMember } from "@/types/localdb";
 import SetImageGoogleById from "@/utils/SetImageGoogleById";
-import { ArrowRight, Heart, Target, Eye, Sparkles, Users, BookOpen, Stethoscope, TreePine } from "lucide-react";
+import { Sparkles, BookOpen, Stethoscope, TreePine } from "lucide-react";
+
+
 
 function GraduateData(){
     const graduatesData: Graduate[] = [
@@ -226,49 +228,119 @@ const AboutPage = () => {
 const staffMembers: StaffMember[] = [
     {
         id: 1,
-        name: 'Father Paul Uwemedimo',
-        position: 'CEO & Founder',
-        department: 'Puso ng Ama Foundation.',
-        email: 'john.smith@company.com',
+        name: 'Fr. Paul Uwemedimo',
+        position: 'Founder & Executive Director',
+        department: 'Executive',
+        email: 'fr.paul@pusongamafoundation.org',
         image: SetImageGoogleById('1aXYEjkrr6U_R5-a-1KFVJl-kBHLEJSQs'),
-        bio: 'John founded the company in 2015 with a vision to revolutionize the industry. With over 20 years of experience in leadership and business strategy, he guides our company toward continued growth and innovation.'
+        bio: 'Founded Puso Ng Ama Foundation in 2010 with a divine calling to serve the poor and marginalized. A Catholic priest dedicated to spreading God\'s love through compassionate action and community development.',
+        expertise: ['Spiritual Leadership', 'Community Development', 'Pastoral Care', 'Non-profit Management'],
+        phone: '+63 912 345 6789',
+        education: 'Master of Divinity, San Carlos Seminary'
     },
     {
         id: 2,
-        name: 'Sarah Johnson',
-        position: 'CTO',
-        department: 'Technology',
-        email: 'sarah.johnson@company.com',
+        name: 'Sister Maria Theresa Santos',
+        position: 'Programs Director',
+        department: 'Programs',
+        email: 'sr.maria@pusongamafoundation.org',
         image: SetImageGoogleById('1aXYEjkrr6U_R5-a-1KFVJl-kBHLEJSQs'),
-        bio: 'Sarah leads our technology team with expertise in software architecture and cloud infrastructure. She has a proven track record of delivering scalable solutions that drive business success.'
+        bio: 'A Religious Sister with over 15 years of experience in community organizing and social development. She oversees all foundation programs ensuring they align with the mission of serving the poorest of the poor.',
+        expertise: ['Program Management', 'Community Organizing', 'Social Work', 'Women Empowerment'],
+        phone: '+63 923 456 7890',
+        education: 'MSW, University of Santo Tomas'
     },
     {
         id: 3,
-        name: 'Mike Chen',
-        position: 'Lead Developer',
-        department: 'Engineering',
-        email: 'mike.chen@company.com',
+        name: 'Brother Jose Rafael Cruz',
+        position: 'Operations Manager',
+        department: 'Operations',
+        email: 'bro.jose@pusongamafoundation.org',
         image: SetImageGoogleById('1aXYEjkrr6U_R5-a-1KFVJl-kBHLEJSQs'),
-        bio: 'Mike is responsible for leading the development team and ensuring our products meet the highest quality standards. His technical expertise and leadership skills are invaluable to our engineering efforts.'
+        bio: 'A Lay Franciscan Brother dedicated to serving the poor through efficient program implementation. He ensures that resources reach those who need them most through streamlined operations and logistics.',
+        expertise: ['Operations Management', 'Logistics', 'Resource Allocation', 'Volunteer Coordination'],
+        phone: '+63 934 567 8901',
+        education: 'BS Business Management, De La Salle University'
     },
     {
         id: 4,
-        name: 'Emily Davis',
-        position: 'Marketing Director',
-        department: 'Marketing',
-        email: 'emily.davis@company.com',
+        name: 'Dr. Maria Consuelo Reyes',
+        position: 'Health Program Coordinator',
+        department: 'Health & Wellness',
+        email: 'dr.reyes@pusongamafoundation.org',
         image: SetImageGoogleById('1aXYEjkrr6U_R5-a-1KFVJl-kBHLEJSQs'),
-        bio: 'Emily develops and executes marketing strategies that have increased our brand awareness by over 200%. Her creative campaigns and data-driven approach deliver exceptional results.'
+        bio: 'A medical doctor who left private practice to serve underserved communities. She leads our medical missions and health education programs, bringing healthcare to remote barangays.',
+        expertise: ['Public Health', 'Medical Missions', 'Health Education', 'Community Medicine'],
+        phone: '+63 945 678 9012',
+        education: 'MD, University of the Philippines Manila'
     },
     {
         id: 5,
-        name: 'David Wilson',
-        position: 'HR Manager',
-        department: 'Human Resources',
-        email: 'david.wilson@company.com',
+        name: 'Mr. Roberto "Bobby" Mendoza',
+        position: 'Youth Formation Director',
+        department: 'Youth Empowerment',
+        email: 'bobby.mendoza@pusongamafoundation.org',
         image: SetImageGoogleById('1aXYEjkrr6U_R5-a-1KFVJl-kBHLEJSQs'),
-        bio: 'David manages our talent acquisition and employee development programs, fostering a positive work culture. His initiatives have significantly improved employee satisfaction and retention.'
+        bio: 'A former youth leader turned formation director, passionate about empowering young people to become agents of change. He develops programs that nurture faith, leadership, and social responsibility.',
+        expertise: ['Youth Leadership', 'Formation Programs', 'Values Education', 'Sports Ministry'],
+        phone: '+63 956 789 0123',
+        education: 'BS Psychology, Ateneo de Manila University'
+    },
+    {
+        id: 6,
+        name: 'Ms. Teresita "Tessie" Villanueva',
+        position: 'Community Relations Officer',
+        department: 'Community Engagement',
+        email: 'tessie.villanueva@pusongamafoundation.org',
+        image: SetImageGoogleById('1aXYEjkrr6U_R5-a-1KFVJl-kBHLEJSQs'),
+        bio: 'A community development worker who builds bridges between the foundation and the communities we serve. Her deep understanding of local culture helps ensure our programs are culturally sensitive and effective.',
+        expertise: ['Community Engagement', 'Cultural Sensitivity', 'Needs Assessment', 'Partnership Building'],
+        phone: '+63 967 890 1234',
+        education: 'BA Sociology, University of the Philippines Diliman'
+    },
+    {
+        id: 7,
+        name: 'Bro. John Paul Fernandez',
+        position: 'Spiritual Formation Coordinator',
+        department: 'Spiritual Ministry',
+        email: 'bro.jp@pusongamafoundation.org',
+        image: SetImageGoogleById('1aXYEjkrr6U_R5-a-1KFVJl-kBHLEJSQs'),
+        bio: 'A religious brother dedicated to nurturing the spiritual life of foundation staff and beneficiaries. He organizes retreats, prayer gatherings, and faith formation activities.',
+        expertise: ['Spiritual Direction', 'Retreat Facilitation', 'Catechesis', 'Pastoral Counseling'],
+        phone: '+63 978 901 2345',
+        education: 'MA Theology, Loyola School of Theology'
+    },
+    {
+        id: 8,
+        name: 'Ms. Angela Kristina Lopez',
+        position: 'Finance & Admin Officer',
+        department: 'Administration',
+        email: 'angela.lopez@pusongamafoundation.org',
+        image: SetImageGoogleById('1aXYEjkrr6U_R5-a-1KFVJl-kBHLEJSQs'),
+        bio: 'Ensures transparent and responsible management of foundation resources. Her background in corporate finance helps maintain the highest standards of financial accountability.',
+        expertise: ['Financial Management', 'Grant Administration', 'Internal Controls', 'Budget Planning'],
+        phone: '+63 989 012 3456',
+        education: 'CPA, University of Santo Tomas'
     }
 ];
+
+// Add expertise field to StaffMember type if not already present
+// In your types/localdb.ts, update the StaffMember interface:
+/*
+export interface StaffMember {
+    id: number;
+    name: string;
+    position: string;
+    department: string;
+    email: string;
+    image: string;
+    bio: string;
+    expertise?: string[];
+    phone?: string;
+    education?: string;
+}
+*/
+
+
 
 export { GraduateData, programs, staffMembers, AboutPage }

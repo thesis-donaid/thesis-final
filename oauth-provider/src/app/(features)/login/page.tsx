@@ -14,7 +14,7 @@ export default function LoginPage() {
     const [donorLoading, setDonorLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
     const [error, setError] = useState("");
-    const [username, setUsername] = useState("");
+    // const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -23,6 +23,7 @@ export default function LoginPage() {
     const dragStartX = useRef(0);
     const autoPlayTimer = useRef<NodeJS.Timeout | null>(null);
     const errorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
 
     // Program carousel items
     const programs = useMemo(() => [
@@ -122,15 +123,17 @@ export default function LoginPage() {
         await signIn("google", { callbackUrl: "/dashboard" });
     };
 
-    const handleDonorLogin = async (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        console.log("Debug ", email, password)
         setError("");
         setDonorLoading(true);
         try {
-            const res = await fetch('/api/auth/donor-login', {
+            const res = await fetch('/api/auth/login', {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ username_email: email, password })
             });
 
             const data = await res.json();
@@ -153,37 +156,37 @@ export default function LoginPage() {
         }
     };
 
-    const handleBeneficiaryLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError("");
-        setBeneficiaryLoading(true);
-        // Handle form submission
-        try {
-            const res = await fetch('/api/auth/login', {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password })
-            })
+    // const handleBeneficiaryLogin = async (e: React.FormEvent) => {
+    //     e.preventDefault();
+    //     setError("");
+    //     setBeneficiaryLoading(true);
+    //     // Handle form submission
+    //     try {
+    //         const res = await fetch('/api/auth/login', {
+    //             method: "POST",
+    //             headers: { "Content-Type": "application/json" },
+    //             body: JSON.stringify({ username, password })
+    //         })
 
-            const data = await res.json();
+    //         const data = await res.json();
 
-            if (!res.ok) {
-                const errorMsg = data.error || "Login failed";
-                setError(errorMsg);
-                if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
-                errorTimeoutRef.current = setTimeout(() => setError(""), 5000);
-                return;
-            }
+    //         if (!res.ok) {
+    //             const errorMsg = data.error || "Login failed";
+    //             setError(errorMsg);
+    //             if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+    //             errorTimeoutRef.current = setTimeout(() => setError(""), 5000);
+    //             return;
+    //         }
 
-            window.location.href = "/";
-        } catch {
-            setError("An error occurred. Please try again.");
-            if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
-            errorTimeoutRef.current = setTimeout(() => setError(""), 5000);
-        } finally {
-            setBeneficiaryLoading(false);
-        }
-    };
+    //         window.location.href = "/";
+    //     } catch {
+    //         setError("An error occurred. Please try again.");
+    //         if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+    //         errorTimeoutRef.current = setTimeout(() => setError(""), 5000);
+    //     } finally {
+    //         setBeneficiaryLoading(false);
+    //     }
+    // };
 
     return (
         <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-red-50/20">
@@ -271,7 +274,7 @@ export default function LoginPage() {
                                 </motion.h1>
                             </motion.div>
 
-                            {/* Login Mode Tabs */}
+                            {/* Login Mode Tabs
                             <motion.div
                                 className="flex bg-gray-100 rounded-xl p-1 mb-6"
                                 initial={{ opacity: 0, y: 10 }}
@@ -300,11 +303,11 @@ export default function LoginPage() {
                                 >
                                     Beneficiary
                                 </button>
-                            </motion.div>
+                            </motion.div> */}
 
                             {/* Login Form */}
                             <AnimatePresence mode="wait">
-                            {loginMode === "beneficiary" ? (
+                            {/* {loginMode === "beneficiary" ? (
                             <motion.form
                                 key="beneficiary-form" 
                                 onSubmit={handleBeneficiaryLogin} 
@@ -388,29 +391,31 @@ export default function LoginPage() {
                                 </motion.button>
                             </motion.form>
                             ) : (
+                                <></>
+                            )} */}
                             <motion.form
                                 key="donor-form"
-                                onSubmit={handleDonorLogin}
+                                onSubmit={handleLogin}
                                 className="space-y-5"
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
                                 transition={{ duration: 0.3 }}
                             >
-                                <p className="text-sm text-gray-500">
+                                {/* <p className="text-sm text-gray-500">
                                     Login as Registered Donor
-                                </p>
+                                </p> */}
 
                                 <div className="space-y-2">
                                     <label htmlFor="email" className="text-sm font-medium text-gray-700 block">
-                                        Email
+                                        Username or Email
                                     </label>
                                     <div className="relative group">
                                         <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-red-600 transition-colors" />
                                         <motion.input
                                             id="email"
-                                            type="email"
-                                            placeholder="Enter your email"
+                                            type="text"
+                                            placeholder="Enter your username or email"
                                             className="w-full pl-12 py-4 border border-gray-200 focus:border-red-600 focus:ring-[3px] focus:ring-red-600/10 rounded-xl transition-all bg-white text-gray-900 font-medium placeholder-gray-400 outline-none"
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
@@ -510,7 +515,6 @@ export default function LoginPage() {
                                     </span>
                                 </p>
                             </motion.form>
-                            )}
                             </AnimatePresence>
 
                             {/* Mobile-only contact info */}

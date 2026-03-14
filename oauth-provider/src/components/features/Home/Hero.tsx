@@ -39,7 +39,7 @@ export default function Hero() {
   const carouselItems = [
     {
       id: 1,
-      image: "https://drive.google.com/uc?export=download&id=1UzGiXpzKlDVZ8OAnkwHiZ2n0k5sOrM1Y",
+      image: "https://drive.google.com/uc?export=download&id=1Jg_dFVRoN5RdAL_SMPf0zfRoV5eGW-Fb",
       title: "Building Hope, Changing Lives",
       subtitle: "Together, we create lasting impact in communities around the world",
       description: "In 2005 father Paul Uwemedimo responded to the situation in Payatas and established the PNA foundation which means HEART OF THE FATHER with the aim of personal and social transformation of individuals, families and communities.",
@@ -59,7 +59,7 @@ export default function Hero() {
     },
     {
       id: 3,
-      image: "https://drive.google.com/uc?export=view&id=1VO0zTH9JMgOVIJXmuTsE7mPIrk0uUVcl",
+      image: "https://drive.google.com/uc?export=view&id=1gBF5WwexzZRNLdNPpRuH5QQ-K7cFMyr_",
       title: "Empowering Futures",
       subtitle: "Creating opportunities for growth and sustainable development",
       description: "Through community development, income generation, health and property ownership programs, we empower families to build sustainable futures.",

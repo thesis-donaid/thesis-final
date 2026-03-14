@@ -22,9 +22,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { AvailableFunds } from "@/types/allocation";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { useSession } from "next-auth/react";
+
 
 // Types for API responses
 interface BeneficiaryRequestData {

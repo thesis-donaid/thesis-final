@@ -36,4 +36,7 @@ export interface StaffMember {
     email: string;
     image: string;
     bio: string;
+    expertise?: string[];
+    phone?: string;
+    education?: string;
 }

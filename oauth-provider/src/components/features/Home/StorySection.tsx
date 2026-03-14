@@ -131,26 +131,7 @@ export default function StorySection() {
           </Link>
         </motion.div>
 
-        {/* ── Stats strip ─────────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7, delay: 0.3 }}
-          className="mt-20 md:mt-24 grid grid-cols-2 md:grid-cols-4 gap-px bg-red-200/50 rounded-3xl overflow-hidden border border-red-200"
-        >
-          {stats.map(({ value, label }, i) => (
-            <motion.div
-              key={label}
-              initial={{ opacity: 0 }}
-              animate={inView ? { opacity: 1 } : {}}
-              transition={{ duration: 0.5, delay: 0.35 + i * 0.08 }}
-              className="flex flex-col items-center justify-center gap-1 bg-white/90 px-6 py-8 text-center"
-            >
-              <span className="text-3xl md:text-4xl font-black text-red-800">{value}</span>
-              <span className="text-red-600 text-xs font-semibold tracking-widest uppercase">{label}</span>
-            </motion.div>
-          ))}
-        </motion.div>
+
 
       </div>
     </section>

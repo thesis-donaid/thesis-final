@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { MapPin, Phone, Mail, Facebook, Heart, ArrowRight, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
+import SetImageGoogleById from "@/utils/SetImageGoogleById";
 
 const quickLinks = [
   { href: "/", label: "Home" },
@@ -55,7 +56,7 @@ export default function Footer() {
       <div className="relative overflow-hidden py-20">
         <div className="absolute inset-0">
           <Image
-            src="/images/youth_empowerment_1772187330023.png"
+            src={SetImageGoogleById("1gBF5WwexzZRNLdNPpRuH5QQ-K7cFMyr_")}
             fill
             alt="CTA background"
             className="object-cover"
