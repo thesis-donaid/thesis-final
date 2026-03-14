@@ -324,22 +324,7 @@ const staffMembers: StaffMember[] = [
     }
 ];
 
-// Add expertise field to StaffMember type if not already present
-// In your types/localdb.ts, update the StaffMember interface:
-/*
-export interface StaffMember {
-    id: number;
-    name: string;
-    position: string;
-    department: string;
-    email: string;
-    image: string;
-    bio: string;
-    expertise?: string[];
-    phone?: string;
-    education?: string;
-}
-*/
+
 
 
 

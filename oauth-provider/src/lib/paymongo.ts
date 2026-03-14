@@ -26,10 +26,10 @@ function getPaymentMethodTypes(method?: string): string[] {
         card: ["card"],
         gcash: ["gcash"],
         paymaya: ["paymaya"],
-        qrph: ["qrph"],
+        // qrph: ["qrph"],
       
     };
-    return methodMap[method || ""] || ["card", "qrph", "gcash", "paymaya"];
+    return methodMap[method || ""] || ["card", "gcash", "paymaya"];
 }
 
 //Create Payment Intent
