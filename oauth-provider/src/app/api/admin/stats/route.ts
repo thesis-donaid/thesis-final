@@ -13,12 +13,17 @@ export async function GET(req: NextRequest) {
         // Parallel execution of count/sum queries
         const [
             totalDonationsAmount,
+            totalNetDonationsAmount,
             totalDisbursedAmount,
+            totalAllocatedFundsAmount,
             totalAllocatedAmount,
             totalAvailableAmount,
             beneficiaryCount,
             pendingRequestCount,
+            totalRequestCount,
             activePoolCount,
+            registeredDonorCount,
+            guestDonorCount,
             recentDonations,
             recentRequests
         ] = await Promise.all([
@@ -26,8 +31,15 @@ export async function GET(req: NextRequest) {
                 where: { status: "completed" },
                 _sum: { amount: true }
             }),
+            prisma.donation.aggregate({
+                where: { status: "completed" },
+                _sum: { net_amount: true }
+            }),
             prisma.allocation.aggregate({
                 where: { is_disbursed: true },
+                _sum: { amount: true }
+            }),
+            prisma.allocation.aggregate({
                 _sum: { amount: true }
             }),
             prisma.pool.aggregate({
@@ -44,9 +56,12 @@ export async function GET(req: NextRequest) {
             prisma.beneficiaryRequest.count({
                 where: { status: "PENDING" }
             }),
+            prisma.beneficiaryRequest.count(), // All requests
             prisma.pool.count({
                 where: { status: "active" }
             }),
+            prisma.registeredDonor.count(),
+            prisma.guestDonor.count(),
             prisma.donation.findMany({
                 where: { status: "completed" },
                 orderBy: { paid_at: "desc" },
@@ -72,18 +87,25 @@ export async function GET(req: NextRequest) {
         ]);
 
         const totalDonations = totalDonationsAmount._sum.amount || 0;
+        const totalNetDonations = totalNetDonationsAmount._sum.net_amount || 0;
+        const totalAllocatedFunds = totalAllocatedFundsAmount._sum.amount || 0;
         const totalAllocated = totalAllocatedAmount._sum.allocated_amount || 0;
         const availableFunds = totalAvailableAmount._sum.available_amount || 0;
 
         return NextResponse.json({
             stats: {
                 totalDonations,
+                totalNetDonations,
                 totalDisbursed: totalDisbursedAmount._sum.amount || 0,
+                totalAllocatedFunds,
                 totalAllocated,
                 availableFunds,
                 totalBeneficiaries: beneficiaryCount,
                 pendingRequests: pendingRequestCount,
-                activePools: activePoolCount
+                totalRequests: totalRequestCount,
+                activePools: activePoolCount,
+                totalRegisteredDonors: registeredDonorCount,
+                totalGuestDonors: guestDonorCount
             },
             recentDonations,
             recentRequests

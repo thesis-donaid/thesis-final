@@ -16,17 +16,28 @@ export async function GET(req: NextRequest) {
         }
 
         const { searchParams } = new URL(req.url);
-        const status = searchParams.get("status"); // PENDING, UNDER_REVIEW, APPROVED, etc.
+        let status = searchParams.get("status"); // PENDING, UNDER_REVIEW, APPROVED, etc.
+        const receiptStatus = searchParams.get("receipt_status"); // PENDING, COMPLETED, MISSING
         const page = parseInt(searchParams.get("page") || "1");
         const limit = parseInt(searchParams.get("limit") || "10");
 
         // Build where clause
         const where: Record<string, unknown> = {};
         
+        // Special case: if status is "RECEIPT/PROOF", we actually want to filter by receipt_status
+        if (status === "RECEIPT/PROOF") {
+             where.receipt_status = { in: ["PENDING", "COMPLETED", "MISSING"] }; // Show requests with receipt tracked
+             status = null; // Clear primary status filter since it's a pseudo-tab
+        }
+
         if (status) {
             // Support comma-separated statuses
             const statuses = status.split(",").map(s => s.trim().toUpperCase());
             where.status = { in: statuses };
+        }
+
+        if (receiptStatus) {
+            where.receipt_status = receiptStatus.toUpperCase();
         }
 
         // Get total count

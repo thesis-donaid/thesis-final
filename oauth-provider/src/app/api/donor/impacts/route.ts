@@ -124,16 +124,16 @@ export async function GET() {
                     for (const a of d.donationAllocations) {
                         if (
                             a.allocation.request?.id === req.id &&
-                            d.blockchain_txt_hash
+                            a.blockchain_tx_hash
                         ) {
                             // Avoid duplicate entries for the same allocation
                             if (!blockchainProofs.some((p) => p.allocationId === a.allocation.id)) {
                                 blockchainProofs.push({
                                     allocationId: a.allocation.id,
-                                    txHash: d.blockchain_txt_hash,
-                                    network: d.blockchain_network ?? "",
-                                    status: d.blockchain_status ?? "",
-                                    savedAt: d.blockchain_saved_at?.toISOString() ?? "",
+                                    txHash: a.blockchain_tx_hash,
+                                    network: a.blockchain_network ?? "",
+                                    status: a.blockchain_status ?? "",
+                                    savedAt: a.blockchain_saved_at?.toISOString() ?? "",
                                     donationReferenceCode: d.reference_code,
                                 });
                             }

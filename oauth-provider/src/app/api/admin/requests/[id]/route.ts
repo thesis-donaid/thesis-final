@@ -418,18 +418,32 @@ export async function PUT(
                     });
 
                     if (result.success) {
-                        // Update all donations linked to this allocation
+                        // Update all DonationAllocations linked to this allocation
                         for (const da of allocation.donationAllocations) {
-                            await prisma.donation.update({
-                                where: { id: da.donation.id },
+                            await prisma.donationAllocation.update({
+                                where: { id: da.id },
                                 data: {
-                                    blockchain_txt_hash: result.transactionHash,
+                                    blockchain_tx_hash: result.transactionHash,
                                     blockchain_network: process.env.BLOCKCHAIN_NETWORK || "sepolia",
                                     blockchain_status: "confirmed",
                                     blockchain_saved_at: new Date(),
                                 },
                             });
                         }
+
+                        // Create audit log entry in BlockchainLedger
+                        await prisma.blockchainLedger.create({
+                            data: {
+                                allocation_id: allocation.id,
+                                request_id: requestId,
+                                tx_hash: result.transactionHash,
+                                block_number: result.blockNumber,
+                                network: process.env.BLOCKCHAIN_NETWORK || "sepolia",
+                                explorer_url: result.explorerUrl,
+                                gas_used: result.gasUsed,
+                                status: "confirmed",
+                            },
+                        });
                     } else {
                         console.error(
                             `[Blockchain] Failed to record proof for allocation ${allocation.id}:`,

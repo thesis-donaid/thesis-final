@@ -21,6 +21,12 @@ import {
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
+interface DonationAllocationBlockchain {
+    blockchain_tx_hash: string | null;
+    blockchain_network: string | null;
+    blockchain_status: string | null;
+}
+
 interface Donation {
     id: number;
     amount: number;
@@ -34,12 +40,10 @@ interface Donation {
     currency: string;
     payment_fee: number | null;
     net_amount: number | null;
-    blockchain_txt_hash: string | null;
-    blockchain_network: string | null;
-    blockchain_status: string | null;
     created_at: string;
     paid_at: string | null;
     pool: { id: string; name: string } | null;
+    donationAllocations?: DonationAllocationBlockchain[];
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
@@ -593,25 +597,29 @@ export default function TransactionHistoryPage() {
                                 )}
 
                                 {/* Blockchain info */}
-                                {selectedDonation.blockchain_txt_hash && (
-                                    <>
-                                        <div className="pt-2 border-t border-gray-100">
-                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Blockchain Record</p>
-                                        </div>
-                                        <DetailRow
-                                            label="Transaction Hash"
-                                            value={selectedDonation.blockchain_txt_hash}
-                                            mono
-                                            truncate
-                                        />
-                                        {selectedDonation.blockchain_network && (
-                                            <DetailRow label="Network" value={selectedDonation.blockchain_network} />
-                                        )}
-                                        {selectedDonation.blockchain_status && (
-                                            <DetailRow label="Status" value={selectedDonation.blockchain_status} />
-                                        )}
-                                    </>
-                                )}
+                                {(() => {
+                                    const bcData = selectedDonation.donationAllocations?.find(da => da.blockchain_tx_hash);
+                                    if (!bcData?.blockchain_tx_hash) return null;
+                                    return (
+                                        <>
+                                            <div className="pt-2 border-t border-gray-100">
+                                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Blockchain Record</p>
+                                            </div>
+                                            <DetailRow
+                                                label="Transaction Hash"
+                                                value={bcData.blockchain_tx_hash}
+                                                mono
+                                                truncate
+                                            />
+                                            {bcData.blockchain_network && (
+                                                <DetailRow label="Network" value={bcData.blockchain_network} />
+                                            )}
+                                            {bcData.blockchain_status && (
+                                                <DetailRow label="Status" value={bcData.blockchain_status} />
+                                            )}
+                                        </>
+                                    );
+                                })()}
                             </div>
                         </div>
                     </div>

@@ -73,15 +73,15 @@ const PAYMENT_METHODS = [
         fee: "1%-2% transaction fee",
         fees: 0.02
     },
-    // { 
-    //     id: "qrph", 
-    //     name: "QR Ph", 
-    //     icon: QrCode,
-    //     color: "bg-purple-500",
-    //     description: "Scan QR code to pay",
-    //     fee: "1%-1.5% transaction fee",
-    //     fees: 0.015
-    // },
+    { 
+        id: "qrph", 
+        name: "QR Ph", 
+        icon: QrCode,
+        color: "bg-purple-500",
+        description: "Scan QR code to pay",
+        fee: "1%-1.5% transaction fee",
+        fees: 0.015
+    },
     { 
         id: "card", 
         name: "Credit Card", 

@@ -44,15 +44,24 @@ export async function GET(
     // 2. Get the full proof from blockchain
     const proof = await getProofFromChain(donationId);
 
-    // 3. Get the transaction hash from our database for the explorer link
+    // 3. Get the transaction hash from donationAllocations for the explorer link
     const donation = await prisma.donation.findUnique({
       where: { reference_code: donationId },
       select: {
-        blockchain_txt_hash: true,
-        blockchain_network: true,
-        blockchain_saved_at: true,
+        donationAllocations: {
+          where: { blockchain_tx_hash: { not: null } },
+          select: {
+            blockchain_tx_hash: true,
+            blockchain_network: true,
+            blockchain_saved_at: true,
+          },
+          take: 1,
+          orderBy: { blockchain_saved_at: 'desc' },
+        },
       },
     });
+
+    const da = donation?.donationAllocations?.[0];
 
     return NextResponse.json({
       success: true,
@@ -60,11 +69,11 @@ export async function GET(
         verified: true,
         proof,
         blockchain: {
-          transactionHash: donation?.blockchain_txt_hash || "",
-          network: donation?.blockchain_network || "",
-          savedAt: donation?.blockchain_saved_at || null,
-          explorerTxUrl: donation?.blockchain_txt_hash
-            ? getExplorerTxUrl(donation.blockchain_txt_hash)
+          transactionHash: da?.blockchain_tx_hash || "",
+          network: da?.blockchain_network || "",
+          savedAt: da?.blockchain_saved_at || null,
+          explorerTxUrl: da?.blockchain_tx_hash
+            ? getExplorerTxUrl(da.blockchain_tx_hash)
             : "",
           contractUrl: getExplorerContractUrl(),
         },

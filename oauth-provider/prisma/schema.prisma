@@ -343,11 +343,6 @@ model Donation {
   paid_at DateTime? // When payment completed
 
 
-  // Blockchain
-  blockchain_txt_hash String?
-  blockchain_network String?
-  blockchain_status String?
-  blockchain_saved_at DateTime?
 
   remaining_amount Float?
 
@@ -430,6 +425,12 @@ model DonationAllocation {
 
   amount_used Float
 
+  // Blockchain proof (stored per donation-allocation link)
+  blockchain_tx_hash String?
+  blockchain_network String?
+  blockchain_status String?
+  blockchain_saved_at DateTime?
+
   // Notification tracking
   donor_notified Boolean @default(false)
   notified_at DateTime?
@@ -444,7 +445,19 @@ model DonationAllocation {
 // ============================================
 model BlockchainLedger {
   id Int @id @default(autoincrement())
-  
+  allocation_id Int
+  request_id Int
+  tx_hash String
+  block_number Int?
+  network String
+  explorer_url String?
+  gas_used String?
+  status String @default("confirmed")
+  recorded_at DateTime @default(now())
+
+  @@index([allocation_id])
+  @@index([tx_hash])
+  @@map("blockchain_ledger")
 }
 
 
