@@ -202,20 +202,31 @@ export async function PATCH(
             },
         });
 
-        // Real-time notification via Pusher
+        // Real-time & Persistent notification for beneficiary
         try {
-            await pusherServer.trigger(
-                `beneficiary-${updated.beneficiary.userId}`,
-                "request-updated",
-                {
-                    requestId: updated.id,
-                    status: updated.status,
-                    purpose: updated.purpose,
-                    amount: updated.amount,
+            const notificationData = {
+                title: `Request ${status.charAt(0) + status.slice(1).toLowerCase().replace('_', ' ')}`,
+                message: `Your request for ${updated.purpose} has been marked as ${status.toLowerCase().replace('_', ' ')}.`,
+                type: status === 'REJECTED' ? 'urgent' : 'system',
+                link: `/beneficiary/requests`
+            };
+
+            // 1. Save to database
+            await prisma.userNotification.create({
+                data: {
+                    userId: updated.beneficiary.userId,
+                    ...notificationData
                 }
+            });
+
+            // 2. Trigger Pusher
+            await pusherServer.trigger(
+                `user-${updated.beneficiary.userId}`,
+                "notification",
+                notificationData
             );
         } catch (pusherError) {
-            console.error("Pusher trigger failed:", pusherError);
+            console.error("Persistent notification failed:", pusherError);
         }
 
         // Send disbursement notifications

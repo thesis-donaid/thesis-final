@@ -216,7 +216,7 @@ export default function BeneficiaryDashboard() {
 
                 {/* Real-time Notification Banner */}
                 {notification && (
-                    <div className="bg-blue-50 border border-blue-200 text-blue-700 px-6 py-4 rounded-xl flex items-center gap-3 animate-in fade-in transition-all">
+                    <div className="absolute top-5 bg-blue-50 border border-blue-200 text-blue-700 px-6 py-4 rounded-xl flex items-center gap-3 animate-in fade-in transition-all">
                         <Bell className="w-5 h-5 shrink-0" />
                         <p className="font-medium text-sm flex-1">{notification}</p>
                         <button onClick={() => setNotification(null)} className="text-blue-400 hover:text-blue-600 text-sm font-bold">✕</button>

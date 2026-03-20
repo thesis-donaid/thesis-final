@@ -47,6 +47,7 @@ model User {
   registeredDonor RegisteredDonor?
   beneficiary Beneficiary?
   createdPools Pool[]
+  notifications UserNotification[]
 }
 
 
@@ -81,13 +82,7 @@ model Account {
   @@unique([provider, providerAccountId])
 }
 
-model VerificationToken {
-  identifier String
-  token String @unique
-  expires DateTime
 
-  @@unique([identifier, token])
-}
 
 model OtpCode {
   id String @id @default(cuid())
@@ -493,4 +488,19 @@ model GeneratedReport {
   created_at DateTime @default(now())
   
   @@map("generated_reports")
+}
+
+model UserNotification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   // e.g., "donation", "request_status", "system"
+  isRead    Boolean  @default(false)
+  link      String?  // Optional link to navigate to
+  created_at DateTime @default(now())
+
+  @@index([userId])
+  @@map("user_notifications")
 }

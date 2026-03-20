@@ -74,17 +74,37 @@ export async function POST(req: NextRequest) {
             }
         });
 
-        // Trigger Pusher for Admin
+        // Notify all admins via persistent notification system
         try {
-            await pusherServer.trigger("admin-events", "new-request", {
-                requestId: request.id,
-                beneficiaryName: `${request.beneficiary.firstName} ${request.beneficiary.lastName}`,
-                purpose: request.purpose,
-                amount: request.amount,
-                urgency: request.urgency_level,
+            const admins = await prisma.user.findMany({
+                where: { role: 'admin' },
+                select: { id: true }
             });
-        } catch (pusherError) {
-            console.error("Pusher admin trigger failed:", pusherError);
+
+            const notificationData = {
+                title: "New Request Submitted",
+                message: `${request.beneficiary.firstName} ${request.beneficiary.lastName} requested ₱${request.amount.toLocaleString()} for ${request.purpose}`,
+                type: 'system',
+                link: `/admin/requests/${request.id}`
+            };
+
+            // 1. Create database notifications for all admins
+            await prisma.userNotification.createMany({
+                data: admins.map(admin => ({
+                    userId: admin.id,
+                    ...notificationData,
+                }))
+            });
+
+            // 2. Trigger real-time Pusher events for all admins
+            const pusherPromises = admins.map(admin => 
+                pusherServer.trigger(`user-${admin.id}`, 'notification', notificationData)
+            );
+            
+            await Promise.all(pusherPromises);
+
+        } catch (notifyError) {
+            console.error("Failed to notify admins:", notifyError);
         }
 
         return NextResponse.json(request, { status: 201 });

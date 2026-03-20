@@ -13,6 +13,7 @@ import {
     XCircle,
     Eye,
     EyeOff,
+    X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -202,15 +203,16 @@ export default function AdminUsersPage() {
             <div className="max-w-6xl mx-auto space-y-6">
 
                 {/* Header */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <Link href="/admin" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-red-600 mb-2 transition-colors">
+                {/* Header responsive adjustment */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-2">
+                    <div className="space-y-1">
+                        <Link href="/admin" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-red-600 mb-1 transition-colors">
                             <ArrowLeft className="w-4 h-4" />
                             Back to Dashboard
                         </Link>
-                        <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-                        <p className="text-sm text-gray-500 mt-1">
-                            View all users across the platform ({counts.admins + counts.beneficiaries + counts.registeredDonors + counts.guestDonors} total)
+                        <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">User Management</h1>
+                        <p className="text-gray-500 text-sm mt-1">
+                            System-wide user registry ({counts.admins + counts.beneficiaries + counts.registeredDonors + counts.guestDonors} total records)
                         </p>
                     </div>
                 </div>
@@ -219,24 +221,33 @@ export default function AdminUsersPage() {
                     <div className="p-3 bg-red-50 border border-red-100 text-red-600 rounded-lg text-sm">{error}</div>
                 )}
 
-                <div className='flex items-center justify-between'>
-                    {/* Search */}
-                    <div className="relative max-w-sm">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                    {/* Search bar matching Pool/Request style */}
+                    <div className="relative flex-1 group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 transition-colors group-focus-within:text-red-500" />
                         <Input
+                            placeholder="Search users by name, email, or username..."
+                            className="pl-12 pr-12 h-14 border-gray-100 focus:border-red-400 focus:ring-red-400/10 rounded-2xl bg-white shadow-sm text-base placeholder:text-gray-400 border-2 w-full"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Search by name or email..."
-                            className="pl-9 h-10 rounded-lg border-gray-200 bg-white text-sm"
                         />
+                        {search && (
+                            <button
+                                onClick={() => setSearch('')}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-all"
+                            >
+                                <X size={18} />
+                            </button>
+                        )}
                     </div>
 
-                    <div>
-                        <Button onClick={() => setIsModalOpen(true)} className='text-white bg-red-500 hover:bg-red-600'>
-                            <Plus className='text-white w-4 h-4 mr-1'/>
-                            Create Beneficiary
-                        </Button>
-                    </div>
+                    <Button 
+                        onClick={() => setIsModalOpen(true)} 
+                        className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 px-6 h-14 rounded-2xl shadow-lg shadow-red-200/50 transition-all hover:scale-[1.02] active:scale-[0.98] w-full md:w-auto"
+                    >
+                        <Plus size={18} />
+                        <span className="font-bold whitespace-nowrap">Create Beneficiary</span>
+                    </Button>
                 </div>
 
 
@@ -273,7 +284,7 @@ export default function AdminUsersPage() {
 
                         {/* BENEFICIARIES TABLE */}
                         {activeTab === 'beneficiaries' && (
-                            <table className="w-full text-sm">
+                            <table className="w-full text-sm min-w-[1000px]">
                                 <thead>
                                     <tr className="bg-gray-50/80 text-left text-xs text-gray-500 uppercase tracking-wider">
                                         <th className="px-6 py-3 font-medium">Name</th>
@@ -319,7 +330,7 @@ export default function AdminUsersPage() {
 
                         {/* ADMINS TABLE */}
                         {activeTab === 'admins' && (
-                            <table className="w-full text-sm">
+                            <table className="w-full text-sm min-w-[800px]">
                                 <thead>
                                     <tr className="bg-gray-50/80 text-left text-xs text-gray-500 uppercase tracking-wider">
                                         <th className="px-6 py-3 font-medium">Name</th>
@@ -349,7 +360,7 @@ export default function AdminUsersPage() {
 
                         {/* REGISTERED DONORS TABLE */}
                         {activeTab === 'registered' && (
-                            <table className="w-full text-sm">
+                            <table className="w-full text-sm min-w-[900px]">
                                 <thead>
                                     <tr className="bg-gray-50/80 text-left text-xs text-gray-500 uppercase tracking-wider">
                                         <th className="px-6 py-3 font-medium">Name</th>
@@ -381,7 +392,7 @@ export default function AdminUsersPage() {
 
                         {/* GUEST DONORS TABLE */}
                         {activeTab === 'guest' && (
-                            <table className="w-full text-sm">
+                            <table className="w-full text-sm min-w-[800px]">
                                 <thead>
                                     <tr className="bg-gray-50/80 text-left text-xs text-gray-500 uppercase tracking-wider">
                                         <th className="px-6 py-3 font-medium">Email</th>
@@ -414,144 +425,194 @@ export default function AdminUsersPage() {
                 </div>
             </div>
 
-            {/* Create Beneficiary Modal */}
-            {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => { setIsModalOpen(false); resetForm(); }} />
-                    <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto">
-                        <div className="px-6 py-4 border-b bg-red-600 text-white flex justify-between items-center sticky top-0 z-10">
-                            <h3 className="text-lg font-bold">Create Beneficiary Account</h3>
-                            <button onClick={() => { setIsModalOpen(false); resetForm(); }} className="text-white/70 hover:text-white transition-colors">
-                                <XCircle size={22} />
-                            </button>
+{/* Premium Create Beneficiary Modal */}
+{isModalOpen && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
+        <div 
+            className="absolute inset-0 bg-gray-900/60 backdrop-blur-md animate-in fade-in duration-300" 
+            onClick={() => { setIsModalOpen(false); resetForm(); }} 
+        />
+        <div className="relative bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-md mx-auto overflow-hidden animate-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
+            {/* Header Section - Compact */}
+            <div className="px-4 sm:px-5 py-4 sm:py-5 bg-gradient-to-br from-red-600 to-red-700 text-white relative shrink-0">
+                <div className="absolute top-0 right-0 p-3 sm:p-4 opacity-10">
+                    <Heart size={60} className="sm:w-[70px] sm:h-[70px]" />
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black tracking-tight mb-1 uppercase">
+                    New Beneficiary
+                </h3>
+                <p className="text-red-100 text-xs font-medium">
+                    Create a secure portal for a new member
+                </p>
+            </div>
+            
+            <form onSubmit={handleCreateBeneficiary} className="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1">
+                {formError && (
+                    <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-2.5 rounded-lg flex items-center gap-2 animate-in fade-in slide-in-from-left-2">
+                        <XCircle size={14} className="shrink-0" />
+                        <p className="text-xs font-semibold">{formError}</p>
+                    </div>
+                )}
+
+                {/* Account Credentials Section */}
+                <div className="space-y-2">
+                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest px-1">
+                        Access Credentials
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest pl-1">
+                                Username
+                            </label>
+                            <Input
+                                required
+                                placeholder="juan.delacruz"
+                                className="h-9 rounded-lg border-gray-100 focus:border-red-400 focus:ring-red-400/20 shadow-sm text-sm"
+                                value={formData.username}
+                                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                            />
                         </div>
-
-                        <form onSubmit={handleCreateBeneficiary} className="p-6 space-y-4">
-                            {formError && (
-                                <div className="p-3 bg-red-50 border border-red-100 text-red-600 rounded-lg text-sm flex items-center gap-2">
-                                    <XCircle size={16} /> {formError}
-                                </div>
-                            )}
-
-                            {/* Username & Password */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1.5">
-                                    <label className="text-sm font-medium text-gray-700">Username <span className="text-red-500">*</span></label>
-                                    <Input
-                                        required
-                                        placeholder="e.g., juan.delacruz"
-                                        value={formData.username}
-                                        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                                    />
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-sm font-medium text-gray-700">Password <span className="text-red-500">*</span></label>
-                                    <div className="relative">
-                                        <Input
-                                            required
-                                            type={showPassword ? 'text' : 'password'}
-                                            placeholder="Min 6 characters"
-                                            minLength={6}
-                                            value={formData.password}
-                                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                            className="pr-10"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                                        >
-                                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Beneficiary Type */}
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-gray-700">Beneficiary Type <span className="text-red-500">*</span></label>
-                                <div className="grid grid-cols-3 gap-3">
-                                    {(['SCHOLAR', 'EMPLOYEE', 'COMMUNITY'] as const).map((t) => (
-                                        <button
-                                            key={t}
-                                            type="button"
-                                            onClick={() => setFormData({ ...formData, type: t })}
-                                            className={`py-2.5 px-3 rounded-lg border text-sm font-medium transition-colors ${
-                                                formData.type === t
-                                                    ? 'bg-red-50 border-red-300 text-red-700'
-                                                    : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
-                                            }`}
-                                        >
-                                            {t.charAt(0) + t.slice(1).toLowerCase()}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Name */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1.5">
-                                    <label className="text-sm font-medium text-gray-700">First Name</label>
-                                    <Input
-                                        placeholder="Juan"
-                                        value={formData.firstName}
-                                        onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                                    />
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-sm font-medium text-gray-700">Last Name</label>
-                                    <Input
-                                        placeholder="Dela Cruz"
-                                        value={formData.lastName}
-                                        onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Contact Info */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1.5">
-                                    <label className="text-sm font-medium text-gray-700">Email</label>
-                                    <Input
-                                        type="email"
-                                        placeholder="juan@example.com"
-                                        value={formData.email}
-                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    />
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-sm font-medium text-gray-700">Phone</label>
-                                    <Input
-                                        placeholder="09123456789"
-                                        value={formData.phone}
-                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Address */}
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-gray-700">Address</label>
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest pl-1">
+                                Password
+                            </label>
+                            <div className="relative">
                                 <Input
-                                    placeholder="Full address"
-                                    value={formData.address}
-                                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                    required
+                                    type={showPassword ? 'text' : 'password'}
+                                    placeholder="••••••••"
+                                    className="h-9 rounded-lg border-gray-100 focus:border-red-400 focus:ring-red-400/20 shadow-sm pr-8 text-sm"
+                                    value={formData.password}
+                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                >
+                                    {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                                </button>
                             </div>
-
-                            {/* Actions */}
-                            <div className="pt-4 flex gap-3 border-t">
-                                <Button type="button" variant="outline" className="flex-1" onClick={() => { setIsModalOpen(false); resetForm(); }}>
-                                    Cancel
-                                </Button>
-                                <Button type="submit" className="flex-1 bg-red-600 hover:bg-red-700 text-white" disabled={isSubmitting}>
-                                    {isSubmitting ? 'Creating...' : 'Create Beneficiary'}
-                                </Button>
-                            </div>
-                        </form>
+                        </div>
                     </div>
                 </div>
-            )}
+
+                {/* Profile Information Section */}
+                <div className="space-y-2">
+                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest px-1">
+                        Profile Details
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest pl-1">
+                                First Name
+                            </label>
+                            <Input
+                                placeholder="Juan"
+                                className="h-9 rounded-lg border-gray-100 focus:border-red-400 focus:ring-red-400/20 shadow-sm text-sm"
+                                value={formData.firstName}
+                                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest pl-1">
+                                Last Name
+                            </label>
+                            <Input
+                                placeholder="Dela Cruz"
+                                className="h-9 rounded-lg border-gray-100 focus:border-red-400 focus:ring-red-400/20 shadow-sm text-sm"
+                                value={formData.lastName}
+                                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Classification Section */}
+                <div className="space-y-2">
+                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest px-1">
+                        Beneficiary Category
+                    </p>
+                    <div className="grid grid-cols-3 gap-1.5">
+                        {(['SCHOLAR', 'EMPLOYEE', 'COMMUNITY'] as const).map((t) => (
+                            <button
+                                key={t}
+                                type="button"
+                                onClick={() => setFormData({ ...formData, type: t })}
+                                className={`h-8 rounded-lg border text-[9px] font-black uppercase tracking-widest transition-all ${
+                                    formData.type === t
+                                        ? 'bg-red-50 border-red-200 text-red-600 shadow-sm font-bold'
+                                        : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'
+                                }`}
+                            >
+                                {t}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Contact Section */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                        <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest pl-1">
+                            Email Address
+                        </label>
+                        <Input
+                            type="email"
+                            placeholder="juan@example.com"
+                            className="h-9 rounded-lg border-gray-100 focus:border-red-400 focus:ring-red-400/20 shadow-sm text-sm"
+                            value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        />
+                    </div>
+                    <div className="space-y-1">
+                        <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest pl-1">
+                            Phone Number
+                        </label>
+                        <Input
+                            placeholder="09XXXXXXXXX"
+                            className="h-9 rounded-lg border-gray-100 focus:border-red-400 focus:ring-red-400/20 shadow-sm text-sm"
+                            value={formData.phone}
+                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        />
+                    </div>
+                </div>
+
+                {/* Address Section */}
+                <div className="space-y-1">
+                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest pl-1">
+                        Residential Address
+                    </label>
+                    <Input
+                        placeholder="Street, Barangay, City"
+                        className="h-9 rounded-lg border-gray-100 focus:border-red-400 focus:ring-red-400/20 shadow-sm text-sm"
+                        value={formData.address}
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    />
+                </div>
+
+                {/* Modal Footer Actions */}
+                <div className="flex gap-2 pt-2 shrink-0">
+                    <Button 
+                        type="button" 
+                        variant="ghost" 
+                        className="flex-1 h-9 rounded-lg font-bold text-gray-400 hover:text-gray-600 uppercase tracking-widest text-[10px]" 
+                        onClick={() => { setIsModalOpen(false); resetForm(); }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button 
+                        type="submit" 
+                        className="flex-1 h-9 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold shadow-lg shadow-red-200 uppercase tracking-widest text-[10px] transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100" 
+                        disabled={isSubmitting}
+                    >
+                        {isSubmitting ? 'INITIALIZING...' : 'ACTIVATE'}
+                    </Button>
+                </div>
+            </form>
+        </div>
+    </div>
+)}
         </div>
     );
 }

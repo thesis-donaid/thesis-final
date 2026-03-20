@@ -19,6 +19,10 @@ import {
     BarChart3,
     Users,
     FileText,
+    X,
+    Target,
+    ShieldCheck,
+    Calendar,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -199,344 +203,349 @@ export default function AdminPoolsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Donation Pools</h1>
-                        <p className="text-gray-500 mt-1">Manage funds, monitor allocations, and track donations per pool.</p>
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 pt-20 sm:pt-24 md:pt-28 pb-20">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                {/* Header Section */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-red-50 rounded-2xl shadow-sm border border-red-100">
+                                <Target className="w-6 h-6 text-red-600" />
+                            </div>
+                            <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
+                                Donation Pools
+                            </h1>
+                        </div>
+                        <p className="text-gray-500 text-sm sm:text-base ml-[3.25rem]">
+                            Organize funds and track community impact
+                        </p>
                     </div>
                     <Button
                         onClick={() => setIsCreateModalOpen(true)}
-                        className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 shadow-sm"
+                        className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 px-6 h-11 rounded-xl shadow-lg shadow-red-200/50 transition-all hover:scale-[1.02] active:scale-[0.98]"
                     >
                         <Plus size={18} />
-                        Create Pool
+                        <span className="font-bold">Create Pool</span>
                     </Button>
                 </div>
 
-                {/* Summary Cards */}
+                {/* Summary Stats Container */}
                 {summary && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                         {[
-                            { label: 'Total Received', value: `₱${summary.totalReceived.toLocaleString()}`, icon: DollarSign, color: 'text-green-600', bg: 'bg-green-50' },
-                            { label: 'Fund Allocated', value: `₱${summary.totalAllocated.toLocaleString()}`, icon: HandCoins, color: 'text-red-600', bg: 'bg-red-50' },
-                            { label: 'Available Funds', value: `₱${summary.totalAvailable.toLocaleString()}`, icon: PiggyBank, color: 'text-blue-600', bg: 'bg-blue-50' },
-                            { label: 'Active Pools', value: `${summary.activePools} / ${summary.totalPools}`, icon: BarChart3, color: 'text-amber-600', bg: 'bg-amber-50' },
-                        ].map((card) => (
-                            <div key={card.label} className="bg-white rounded-xl border p-5 shadow-sm">
-                                <div className="flex items-center gap-3 mb-3">
-                                    <div className={`w-10 h-10 ${card.bg} rounded-lg flex items-center justify-center`}>
-                                        <card.icon size={20} className={card.color} />
+                            { label: 'Total Received', value: `₱${summary.totalReceived.toLocaleString()}`, icon: Wallet, bg: 'bg-indigo-50', color: 'text-indigo-500' },
+                            { label: 'Funds Allocated', value: `₱${summary.totalAllocated.toLocaleString()}`, icon: HandCoins, bg: 'bg-pink-50', color: 'text-pink-500' },
+                            { label: 'Available Funds', value: `₱${summary.totalAvailable.toLocaleString()}`, icon: PiggyBank, bg: 'bg-emerald-50', color: 'text-emerald-500' },
+                            { label: 'Active Pools', value: `${summary.activePools} / ${summary.totalPools}`, icon: BarChart3, bg: 'bg-orange-50', color: 'text-orange-500' },
+                        ].map((card, i) => (
+                            <div key={i} className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-sm flex flex-col justify-between min-h-[100px] hover:shadow-md transition-all duration-300">
+                                <div className="flex justify-between items-start">
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                        {card.label}
+                                    </p>
+                                    <div className={`${card.bg} p-2 rounded-xl`}>
+                                        <card.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${card.color}`} />
                                     </div>
-                                    <span className="text-xs uppercase tracking-wider text-gray-400 font-medium">{card.label}</span>
                                 </div>
-                                <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
+                                <p className="text-xl sm:text-2xl font-black text-gray-900 mt-2">
+                                    {card.value}
+                                </p>
                             </div>
                         ))}
                     </div>
                 )}
 
-                {/* Search */}
-                <div className="bg-white p-4 rounded-xl shadow-sm border mb-6">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                        <Input
-                            placeholder="Search pools by name or description..."
-                            className="pl-10 h-11"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
+
+                {/* Search Bar Container */}
+                <div className="relative mb-8 group">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 transition-colors group-focus-within:text-red-500" />
+                    <Input
+                        placeholder="Filter pools by name or description..."
+                        className="pl-12 pr-12 h-14 border-gray-100 focus:border-red-400 focus:ring-red-400/10 rounded-2xl bg-white shadow-sm text-base placeholder:text-gray-400 border-2"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    {searchQuery && (
+                        <button
+                            onClick={() => setSearchQuery('')}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-all"
+                        >
+                            <X size={18} />
+                        </button>
+                    )}
                 </div>
 
                 {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 flex items-center gap-2">
-                        <XCircle size={18} /> {error}
+                    <div className="bg-red-50/80 backdrop-blur-sm border-l-4 border-red-500 text-red-700 p-4 rounded-xl mb-8 flex items-center gap-3 animate-in fade-in slide-in-from-left-2">
+                        <XCircle size={20} className="shrink-0" />
+                        <p className="text-sm font-medium">{error}</p>
                     </div>
                 )}
 
-                {/* Pools List */}
-                <div className="space-y-5">
+                {/* Pool List Section */}
+                <div className="space-y-4">
                     {filteredPools.length > 0 ? (
                         filteredPools.map((pool) => {
-                            const utilization = pool.total_received > 0
-                                ? Math.round((pool.allocated_amount / pool.total_received) * 100)
-                                : 0;
                             const isExpanded = expandedPool === pool.id;
                             const tab = activeTab[pool.id] || 'donations';
-                            const completedDonations = pool.donation.filter(d => d.status === 'completed').length;
-                            const disbursedAllocations = pool.allocations.filter(a => a.is_disbursed).length;
+                            const utilization = pool.total_received > 0 
+                                ? Math.min((pool.allocated_amount / pool.total_received) * 100, 100) 
+                                : 0;
 
                             return (
-                                <div key={pool.id} className="bg-white rounded-xl shadow-sm border overflow-hidden">
-                                    {/* Pool Header Row */}
-                                    <div className="p-6">
-                                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                                            <div className="flex items-start gap-4 flex-1 min-w-0">
-                                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                                                    pool.status === 'active' ? 'bg-green-50' :
-                                                    pool.status === 'paused' ? 'bg-amber-50' : 'bg-gray-100'
-                                                }`}>
-                                                    <Wallet size={22} className={
-                                                        pool.status === 'active' ? 'text-green-600' :
-                                                        pool.status === 'paused' ? 'text-amber-600' : 'text-gray-400'
-                                                    } />
-                                                </div>
-                                                <div className="min-w-0">
-                                                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                                        <h3 className="text-lg font-bold text-gray-900 truncate">{pool.name}</h3>
-                                                        <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider ${
-                                                            pool.status === 'active' ? 'bg-green-100 text-green-700' :
-                                                            pool.status === 'paused' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'
-                                                        }`}>
-                                                            {pool.status}
-                                                        </span>
-                                                        <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${
-                                                            getPoolDonationType(pool.name) === 'unrestricted'
-                                                                ? 'bg-blue-50 text-blue-600'
-                                                                : 'bg-purple-50 text-purple-600'
-                                                        }`}>
-                                                            {getPoolDonationType(pool.name)}
-                                                        </span>
+                                <div
+                                    key={pool.id}
+                                    className={`group bg-white rounded-xl border transition-all duration-300 overflow-hidden ${
+                                        isExpanded ? 'border-red-100 shadow-lg shadow-red-500/5 ring-1 ring-red-50' : 'border-gray-100 shadow-sm hover:shadow-md hover:border-red-100/50'
+                                    }`}
+                                >
+                                    {/* Pool Main Info Wrapper */}
+                                    <div className="p-4 sm:p-5">
+                                        <div className="flex flex-col lg:flex-row gap-4">
+                                            {/* Left Column: Title & Icons */}
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-start gap-3">
+                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm border ${
+                                                        pool.status === 'active' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-gray-50 border-gray-100 text-gray-400'
+                                                    }`}>
+                                                        <Wallet size={20} />
                                                     </div>
-                                                    <p className="text-sm text-gray-500 line-clamp-1">{pool.description || 'No description'}</p>
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                                                            <h3 className="text-md font-black text-gray-800 truncate uppercase tracking-tight">
+                                                                {pool.name}
+                                                            </h3>
+                                                            <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border ${
+                                                                pool.status === 'active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-gray-50 text-gray-500 border-gray-200'
+                                                            }`}>
+                                                                {pool.status}
+                                                            </span>
+                                                            <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border ${
+                                                                getPoolDonationType(pool.name) === 'unrestricted' 
+                                                                    ? 'bg-blue-50 text-blue-600 border-blue-100' 
+                                                                    : 'bg-purple-50 text-purple-600 border-purple-100'
+                                                            }`}>
+                                                                {getPoolDonationType(pool.name)}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-gray-500 text-xs leading-relaxed line-clamp-2">
+                                                            {pool.description || "Mission-critical donation pool supporting Puso ng Ama community initiatives."}
+                                                        </p>
+                                                    </div>
                                                 </div>
                                             </div>
 
-                                            {/* Stats Row */}
-                                            <div className="flex items-center gap-6 lg:gap-8">
-                                                <div className="text-center">
-                                                    <div className="text-[10px] uppercase tracking-widest text-gray-400 mb-0.5">Received</div>
-                                                    <div className="text-lg font-bold text-gray-900">₱{pool.total_received.toLocaleString()}</div>
+                                            {/* Right Column: Stats Grid */}
+                                            <div className="grid grid-cols-2 sm:grid-cols-4 lg:flex lg:items-center gap-3 sm:gap-4 shrink-0">
+                                                <div className="lg:w-24">
+                                                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Received</p>
+                                                    <p className="text-base font-black text-gray-900">₱{pool.total_received.toLocaleString()}</p>
                                                 </div>
-                                                <div className="text-center">
-                                                    <div className="text-[10px] uppercase tracking-widest text-gray-400 mb-0.5">Allocated</div>
-                                                    <div className="text-lg font-bold text-red-600">₱{pool.allocated_amount.toLocaleString()}</div>
+                                                <div className="lg:w-24">
+                                                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Allocated</p>
+                                                    <p className="text-base font-black text-pink-500">₱{pool.allocated_amount.toLocaleString()}</p>
                                                 </div>
-                                                <div className="text-center">
-                                                    <div className="text-[10px] uppercase tracking-widest text-gray-400 mb-0.5">Available</div>
-                                                    <div className="text-lg font-bold text-green-600">₱{pool.available_amount.toLocaleString()}</div>
+                                                <div className="lg:w-24">
+                                                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Available</p>
+                                                    <p className="text-base font-black text-emerald-600">₱{pool.available_amount.toLocaleString()}</p>
                                                 </div>
-                                                <div className="text-center min-w-[60px]">
-                                                    <div className="text-[10px] uppercase tracking-widest text-gray-400 mb-0.5">Used</div>
-                                                    <div className={`text-lg font-bold ${utilization >= 80 ? 'text-red-600' : utilization >= 50 ? 'text-amber-600' : 'text-blue-600'}`}>{utilization}%</div>
+                                                <div className="lg:w-12 text-center">
+                                                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Used</p>
+                                                    <span className={`text-sm font-black ${utilization >= 90 ? 'text-red-500' : 'text-blue-500'}`}>
+                                                        {utilization.toFixed(0)}%
+                                                    </span>
                                                 </div>
-                                            </div>
-
-                                            {/* Actions */}
-                                            <div className="flex items-center gap-2 shrink-0">
-                                                <button
-                                                    onClick={() => handleDeletePool(pool.id)}
-                                                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                                    title="Delete"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                                <button
-                                                    onClick={() => toggleExpand(pool.id)}
-                                                    className={`p-2 rounded-lg transition-colors ${isExpanded ? 'bg-red-50 text-red-600' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'}`}
-                                                    title={isExpanded ? 'Collapse' : 'Expand'}
-                                                >
-                                                    {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                                                </button>
                                             </div>
                                         </div>
 
-                                        {/* Progress Bar */}
-                                        <div className="mt-4">
-                                            <div className="w-full bg-gray-100 rounded-full h-2">
-                                                <div
-                                                    className={`h-2 rounded-full transition-all duration-500 ${
-                                                        utilization >= 80 ? 'bg-red-500' : utilization >= 50 ? 'bg-amber-500' : 'bg-red-400'
-                                                    }`}
-                                                    style={{ width: `${Math.min(100, utilization)}%` }}
-                                                />
+                                        {/* Progress Section */}
+                                        <div className="mt-5 pt-3">
+                                            <div className="flex justify-between items-center mb-1.5">
+                                                <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+                                                    <TrendingUp size={10} className="text-red-400" />
+                                                    Allocation Utilization
+                                                </div>
+                                                <p className="text-[9px] font-bold space-x-1.5">
+                                                    <span className="text-gray-400">{pool.donation.length} Contributions</span>
+                                                    <span className="text-gray-300">|</span>
+                                                    <span className="text-gray-400">{pool.allocations.length} Disbursements</span>
+                                                </p>
                                             </div>
-                                            <div className="flex justify-between mt-1.5 text-[11px] text-gray-400">
-                                                <span>{pool.donation.length} donations · {pool.allocations.length} allocations</span>
+                                            <div className="h-2 w-full bg-gray-50 rounded-full border border-gray-100 overflow-hidden shadow-inner flex">
+                                                <div 
+                                                    className={`h-full transition-all duration-1000 relative ${
+                                                        utilization >= 90 ? 'bg-gradient-to-r from-red-500 to-red-400' : 'bg-gradient-to-r from-red-600 to-red-500'
+                                                    }`}
+                                                    style={{ width: `${utilization}%` }}
+                                                >
+                                                    <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                                                </div>
+                                            </div>
+                                            <div className="mt-1.5 flex justify-between text-[9px] text-gray-400 font-medium">
                                                 <span className="flex items-center gap-1">
                                                     <Clock size={10} />
                                                     Created {new Date(pool.created_at).toLocaleDateString()}
-                                                    {pool.createdBy && ` by ${pool.createdBy.firstName} ${pool.createdBy.lastName}`}
                                                 </span>
+                                                {pool.createdBy && <span>By {pool.createdBy.firstName} {pool.createdBy.lastName}</span>}
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Expanded Section */}
+                                    {/* Action Footer */}
+                                    <div className={`px-4 sm:px-5 py-3 flex items-center justify-between border-t transition-colors ${
+                                        isExpanded ? 'bg-red-50/30 border-red-100' : 'bg-gray-50/50 border-gray-100 group-hover:bg-red-50/20 group-hover:border-red-100/30'
+                                    }`}>
+                                        <button
+                                            onClick={() => toggleExpand(pool.id)}
+                                            className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest transition-colors ${
+                                                isExpanded ? 'text-red-600' : 'text-gray-500 hover:text-gray-800'
+                                            }`}
+                                        >
+                                            {isExpanded ? (
+                                                <>Close Details <ChevronUp size={14} /></>
+                                            ) : (
+                                                <>Expand Details <ChevronDown size={14} /></>
+                                            )}
+                                        </button>
+                                        <div className="flex items-center gap-1.5">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => router.push(`/admin/pools/${pool.id}`)}
+                                                className="bg-white border-gray-200 text-gray-700 font-bold uppercase tracking-wider text-[9px] h-8 px-3 rounded-lg hover:bg-gray-50"
+                                            >
+                                                Manage
+                                            </Button>
+                                            <button
+                                                onClick={() => handleDeletePool(pool.id)}
+                                                className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-white rounded-lg transition-all border border-transparent hover:border-red-100"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Expanded Content Area */}
                                     {isExpanded && (
-                                        <div className="border-t">
-                                            {/* Tabs */}
-                                            <div className="flex border-b bg-gray-50/50">
-                                                <button
-                                                    onClick={() => setActiveTab(prev => ({ ...prev, [pool.id]: 'donations' }))}
-                                                    className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors border-b-2 ${
-                                                        tab === 'donations'
-                                                            ? 'border-red-600 text-red-600 bg-white'
-                                                            : 'border-transparent text-gray-500 hover:text-gray-700'
-                                                    }`}
-                                                >
-                                                    <DollarSign size={15} />
-                                                    Donations ({pool.donation.length})
-                                                </button>
-                                                <button
-                                                    onClick={() => setActiveTab(prev => ({ ...prev, [pool.id]: 'allocations' }))}
-                                                    className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors border-b-2 ${
-                                                        tab === 'allocations'
-                                                            ? 'border-red-600 text-red-600 bg-white'
-                                                            : 'border-transparent text-gray-500 hover:text-gray-700'
-                                                    }`}
-                                                >
-                                                    <HandCoins size={15} />
-                                                    Fund Allocations ({pool.allocations.length})
-                                                </button>
+                                        <div className="border-t border-red-100 bg-white animate-in slide-in-from-top-4 duration-300">
+                                            {/* Top Tabs */}
+                                            <div className="flex px-4 border-b border-gray-50">
+                                                {(['donations', 'allocations'] as const).map((t) => (
+                                                    <button
+                                                        key={t}
+                                                        onClick={() => setActiveTab(prev => ({ ...prev, [pool.id]: t }))}
+                                                        className={`px-4 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all border-b-2 ${
+                                                            tab === t 
+                                                                ? 'border-red-600 text-red-600' 
+                                                                : 'border-transparent text-gray-400 hover:text-gray-600'
+                                                        }`}
+                                                    >
+                                                        {t} ({t === 'donations' ? pool.donation.length : pool.allocations.length})
+                                                    </button>
+                                                ))}
                                             </div>
 
-                                            <div className="p-5">
-                                                {/* Donations Tab */}
-                                                {tab === 'donations' && (
-                                                    <div>
-                                                        {pool.donation.length > 0 ? (
-                                                            <div className="overflow-x-auto">
-                                                                <table className="w-full text-sm">
-                                                                    <thead>
-                                                                        <tr className="text-left text-[11px] uppercase tracking-wider text-gray-400 border-b">
-                                                                            <th className="pb-3 pr-4">Donor</th>
-                                                                            <th className="pb-3 pr-4">Amount</th>
-                                                                            <th className="pb-3 pr-4">Type</th>
-                                                                            <th className="pb-3 pr-4">Status</th>
-                                                                            <th className="pb-3">Date</th>
+                                            <div className="p-4">
+                                                {tab === 'donations' ? (
+                                                    <div className="space-y-3">
+                                                        <div className="overflow-x-auto rounded-xl border border-gray-100">
+                                                            <table className="w-full text-left text-[10px] border-collapse">
+                                                                <thead>
+                                                                    <tr className="bg-gray-50/80 border-b border-gray-100">
+                                                                        <th className="px-3 py-2 font-black text-gray-400 uppercase tracking-tighter">Donor Entity</th>
+                                                                        <th className="px-3 py-2 font-black text-gray-400 uppercase tracking-tighter">Amount</th>
+                                                                        <th className="px-3 py-2 font-black text-gray-400 uppercase tracking-tighter">Date</th>
+                                                                        <th className="px-3 py-2 font-black text-gray-400 uppercase tracking-tighter">Type</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody className="divide-y divide-gray-50">
+                                                                    {pool.donation.length === 0 ? (
+                                                                        <tr>
+                                                                            <td colSpan={4} className="px-3 py-6 text-center text-gray-300 italic">
+                                                                                No donations recorded yet.
+                                                                            </td>
                                                                         </tr>
-                                                                    </thead>
-                                                                    <tbody className="divide-y divide-gray-50">
-                                                                        {pool.donation.map(d => (
-                                                                            <tr key={d.id} className="hover:bg-gray-50/50">
-                                                                                <td className="py-3 pr-4">
+                                                                    ) : (
+                                                                        pool.donation.map((d) => (
+                                                                            <tr key={d.id} className="hover:bg-gray-50/30 transition-colors">
+                                                                                <td className="px-3 py-2.5">
                                                                                     <div className="flex items-center gap-2">
-                                                                                        <div className="w-7 h-7 rounded-full bg-red-50 flex items-center justify-center">
-                                                                                            <Users size={12} className="text-red-500" />
+                                                                                        <div className="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100">
+                                                                                            <Users size={12} className="text-gray-400" />
                                                                                         </div>
-                                                                                        <span className="font-medium text-gray-800">{getDonorName(d)}</span>
+                                                                                        <span className="font-bold text-gray-800 text-[10px]">{getDonorName(d)}</span>
                                                                                     </div>
                                                                                 </td>
-                                                                                <td className="py-3 pr-4 font-semibold text-gray-900">₱{d.amount.toLocaleString()}</td>
-                                                                                <td className="py-3 pr-4">
-                                                                                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${
-                                                                                        d.donation_type === 'restricted' ? 'bg-purple-50 text-purple-600' : 'bg-blue-50 text-blue-600'
-                                                                                    }`}>
+                                                                                <td className="px-3 py-2.5 font-black text-emerald-600 text-[11px]">+₱{d.amount.toLocaleString()}</td>
+                                                                                <td className="px-3 py-2.5 text-gray-500 font-medium">
+                                                                                    <div className="flex items-center gap-1.5">
+                                                                                        <Calendar size={10} className="text-gray-300" />
+                                                                                        {new Date(d.paid_at || d.created_at).toLocaleDateString()}
+                                                                                    </div>
+                                                                                </td>
+                                                                                <td className="px-3 py-2.5">
+                                                                                    <span className="px-1.5 py-0.5 rounded-md bg-gray-50 text-gray-400 text-[9px] font-bold uppercase">
                                                                                         {d.donation_type}
                                                                                     </span>
                                                                                 </td>
-                                                                                <td className="py-3 pr-4">
-                                                                                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${
-                                                                                        d.status === 'completed' ? 'bg-green-50 text-green-600' :
-                                                                                        d.status === 'pending' ? 'bg-amber-50 text-amber-600' :
-                                                                                        'bg-gray-100 text-gray-500'
-                                                                                    }`}>
-                                                                                        {d.status}
-                                                                                    </span>
-                                                                                </td>
-                                                                                <td className="py-3 text-gray-500 text-xs">
-                                                                                    {new Date(d.paid_at || d.created_at).toLocaleDateString()}
-                                                                                </td>
                                                                             </tr>
-                                                                        ))}
-                                                                    </tbody>
-                                                                </table>
-                                                                <div className="mt-3 pt-3 border-t flex items-center justify-between text-xs text-gray-400">
-                                                                    <span>{completedDonations} of {pool.donation.length} completed</span>
-                                                                    <span className="font-medium text-gray-600">
-                                                                        Total: ₱{pool.donation.reduce((s, d) => s + d.amount, 0).toLocaleString()}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        ) : (
-                                                            <div className="text-center py-10 text-gray-400">
-                                                                <DollarSign size={32} className="mx-auto mb-2 text-gray-300" />
-                                                                <p className="text-sm">No donations received yet</p>
-                                                            </div>
-                                                        )}
+                                                                        ))
+                                                                    )}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
                                                     </div>
-                                                )}
-
-                                                {/* Allocations Tab — Where Funds Were Allocated */}
-                                                {tab === 'allocations' && (
-                                                    <div>
-                                                        {pool.allocations.length > 0 ? (
-                                                            <div className="overflow-x-auto">
-                                                                <table className="w-full text-sm">
-                                                                    <thead>
-                                                                        <tr className="text-left text-[11px] uppercase tracking-wider text-gray-400 border-b">
-                                                                            <th className="pb-3 pr-4">Beneficiary</th>
-                                                                            <th className="pb-3 pr-4">Purpose</th>
-                                                                            <th className="pb-3 pr-4">Amount</th>
-                                                                            <th className="pb-3 pr-4">Source</th>
-                                                                            <th className="pb-3 pr-4">Disbursed</th>
-                                                                            <th className="pb-3">Date</th>
+                                                ) : (
+                                                    <div className="space-y-3">
+                                                        <div className="overflow-x-auto rounded-xl border border-gray-100">
+                                                            <table className="w-full text-left text-[10px] border-collapse">
+                                                                <thead>
+                                                                    <tr className="bg-gray-50/80 border-b border-gray-100">
+                                                                        <th className="px-3 py-2 font-black text-gray-400 uppercase tracking-tighter">Beneficiary Target</th>
+                                                                        <th className="px-3 py-2 font-black text-gray-400 uppercase tracking-tighter">Purpose</th>
+                                                                        <th className="px-3 py-2 font-black text-gray-400 uppercase tracking-tighter">Amount</th>
+                                                                        <th className="px-3 py-2 font-black text-gray-400 uppercase tracking-tighter">Status</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody className="divide-y divide-gray-50">
+                                                                    {pool.allocations.length === 0 ? (
+                                                                        <tr>
+                                                                            <td colSpan={4} className="px-3 py-6 text-center text-gray-300 italic">
+                                                                                Resources awaiting allocation.
+                                                                            </td>
                                                                         </tr>
-                                                                    </thead>
-                                                                    <tbody className="divide-y divide-gray-50">
-                                                                        {pool.allocations.map(a => (
-                                                                            <tr key={a.id} className="hover:bg-gray-50/50">
-                                                                                <td className="py-3 pr-4">
+                                                                    ) : (
+                                                                        pool.allocations.map((a) => (
+                                                                            <tr key={a.id} className="hover:bg-gray-50/30 transition-colors">
+                                                                                <td className="px-3 py-2.5">
                                                                                     <div className="flex items-center gap-2">
-                                                                                        <div className="w-7 h-7 rounded-full bg-amber-50 flex items-center justify-center">
-                                                                                            <Users size={12} className="text-amber-600" />
+                                                                                        <div className="w-6 h-6 rounded-full bg-red-50 flex items-center justify-center border border-red-100">
+                                                                                            <FileText size={12} className="text-red-500" />
                                                                                         </div>
-                                                                                        <span className="font-medium text-gray-800">
+                                                                                        <span className="font-bold text-gray-800 text-[10px]">
                                                                                             {a.request.beneficiary.firstName} {a.request.beneficiary.lastName}
                                                                                         </span>
                                                                                     </div>
                                                                                 </td>
-                                                                                <td className="py-3 pr-4">
-                                                                                    <div className="max-w-[200px]">
-                                                                                        <p className="text-gray-700 truncate">{a.request.purpose}</p>
-                                                                                        <p className="text-[11px] text-gray-400">Request #{a.request.id} · ₱{a.request.amount.toLocaleString()} requested</p>
-                                                                                    </div>
+                                                                                <td className="px-3 py-2.5 max-w-xs">
+                                                                                    <p className="font-medium text-gray-600 truncate text-[10px]" title={a.request.purpose}>
+                                                                                        {a.request.purpose}
+                                                                                    </p>
                                                                                 </td>
-                                                                                <td className="py-3 pr-4 font-semibold text-red-600">₱{a.amount.toLocaleString()}</td>
-                                                                                <td className="py-3 pr-4">
-                                                                                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${
-                                                                                        a.source_type === 'RESTRICTED' ? 'bg-purple-50 text-purple-600' : 'bg-blue-50 text-blue-600'
+                                                                                <td className="px-3 py-2.5 font-black text-red-500 text-[11px]">-₱{a.amount.toLocaleString()}</td>
+                                                                                <td className="px-3 py-2.5">
+                                                                                    <span className={`px-1.5 py-0.5 rounded-md font-black uppercase tracking-widest text-[8px] ${
+                                                                                        a.is_disbursed ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
                                                                                     }`}>
-                                                                                        {a.source_type}
+                                                                                        {a.is_disbursed ? 'DISBURSED' : 'PENDING'}
                                                                                     </span>
                                                                                 </td>
-                                                                                <td className="py-3 pr-4">
-                                                                                    {a.is_disbursed ? (
-                                                                                        <span className="inline-flex items-center gap-1 text-green-600 text-xs font-medium">
-                                                                                            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                                                                                            Yes
-                                                                                        </span>
-                                                                                    ) : (
-                                                                                        <span className="inline-flex items-center gap-1 text-amber-600 text-xs font-medium">
-                                                                                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                                                                                            Pending
-                                                                                        </span>
-                                                                                    )}
-                                                                                </td>
-                                                                                <td className="py-3 text-gray-500 text-xs">
-                                                                                    {new Date(a.allocated_at).toLocaleDateString()}
-                                                                                </td>
                                                                             </tr>
-                                                                        ))}
-                                                                    </tbody>
-                                                                </table>
-                                                                <div className="mt-3 pt-3 border-t flex items-center justify-between text-xs text-gray-400">
-                                                                    <span>{disbursedAllocations} of {pool.allocations.length} disbursed</span>
-                                                                    <span className="font-medium text-gray-600">
-                                                                        Total Allocated: ₱{pool.allocations.reduce((s, a) => s + a.amount, 0).toLocaleString()}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        ) : (
-                                                            <div className="text-center py-10 text-gray-400">
-                                                                <HandCoins size={32} className="mx-auto mb-2 text-gray-300" />
-                                                                <p className="text-sm">No funds allocated from this pool yet</p>
-                                                            </div>
-                                                        )}
+                                                                        ))
+                                                                    )}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>
@@ -546,107 +555,123 @@ export default function AdminPoolsPage() {
                             );
                         })
                     ) : (
-                        <div className="bg-white rounded-xl border border-dashed p-12 text-center">
-                            <div className="bg-red-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Wallet className="text-red-300" size={32} />
+                        <div className="bg-white rounded-xl border-2 border-dashed border-gray-100 p-10 text-center shadow-inner">
+                            <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
+                                <ShieldCheck className="text-gray-300 w-7 h-7" />
                             </div>
-                            <h3 className="text-lg font-medium text-gray-900 mb-1">No pools found</h3>
-                            <p className="text-gray-500 mb-6">Create your first donation pool to start managing funds.</p>
+                            <h3 className="text-xl font-black text-gray-900 mb-1 tracking-tight">System Ready for Deployment</h3>
+                            <p className="text-gray-500 text-xs mb-6 max-w-md mx-auto">
+                                No donation pools are currently initialized. Create your first pool to begin managing community resources.
+                            </p>
                             <Button
                                 onClick={() => setIsCreateModalOpen(true)}
-                                className="bg-red-600 hover:bg-red-700 text-white"
+                                className="bg-red-600 hover:bg-red-700 text-white px-8 h-10 rounded-xl shadow-lg shadow-red-200 text-xs"
                             >
-                                <Plus size={18} className="mr-2" />
-                                Create Pool
+                                Get Started
                             </Button>
                         </div>
                     )}
                 </div>
             </div>
 
-            {/* Create Pool Modal */}
-            {isCreateModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsCreateModalOpen(false)} />
-                    <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-                        <div className="px-6 py-4 border-b bg-red-600 text-white flex justify-between items-center">
-                            <h3 className="text-lg font-bold">Create New Pool</h3>
-                            <button onClick={() => setIsCreateModalOpen(false)} className="text-white/70 hover:text-white transition-colors">
-                                <XCircle size={22} />
-                            </button>
-                        </div>
-                        <form onSubmit={handleCreatePool} className="p-6 space-y-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">Pool Name</label>
-                                <Input
-                                    required
-                                    placeholder="e.g., Youth Development, Staff Development"
-                                    value={newPool.name}
-                                    onChange={(e) => setNewPool({ ...newPool, name: e.target.value })}
-                                />
-                                {newPool.name.trim() && (
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <span className="text-xs text-gray-400">Donation type:</span>
-                                        <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${
-                                            getPoolDonationType(newPool.name) === 'unrestricted'
-                                                ? 'bg-blue-50 text-blue-600'
-                                                : 'bg-purple-50 text-purple-600'
-                                        }`}>
-                                            {getPoolDonationType(newPool.name)}
-                                        </span>
-                                        <span className="text-[11px] text-gray-400">
-                                            {getPoolDonationType(newPool.name) === 'unrestricted'
-                                                ? '— General-purpose fund'
-                                                : '— Donations are restricted to this pool'}
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">Starting Amount (₱)</label>
-                                <Input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    placeholder="0.00"
-                                    value={newPool.total_amount}
-                                    onChange={(e) => setNewPool({ ...newPool, total_amount: e.target.value })}
-                                />
-                                <p className="text-[11px] text-gray-400">Initial balance for this pool. Leave at 0 if starting fresh.</p>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">Description</label>
-                                <Textarea
-                                    placeholder="Brief description of this pool's purpose..."
-                                    rows={3}
-                                    value={newPool.description}
-                                    onChange={(e) => setNewPool({ ...newPool, description: e.target.value })}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">Status</label>
-                                <select
-                                    className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-                                    value={newPool.status}
-                                    onChange={(e) => setNewPool({ ...newPool, status: e.target.value })}
-                                >
-                                    <option value="active">Active</option>
-                                    <option value="paused">Paused</option>
-                                    <option value="closed">Closed</option>
-                                </select>
-                            </div>
-                            <div className="pt-4 flex gap-3">
-                                <Button type="button" variant="outline" className="flex-1" onClick={() => setIsCreateModalOpen(false)}>
-                                    Cancel
-                                </Button>
-                                <Button type="submit" className="flex-1 bg-red-600 hover:bg-red-700 text-white" disabled={isSubmitting}>
-                                    {isSubmitting ? 'Creating...' : 'Create Pool'}
-                                </Button>
-                            </div>
-                        </form>
-                    </div>
+            {/* Premium Create Pool Modal */}
+{isCreateModalOpen && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
+        <div 
+            className="absolute inset-0 bg-gray-900/60 backdrop-blur-md animate-in fade-in duration-300" 
+            onClick={() => setIsCreateModalOpen(false)} 
+        />
+        <div className="relative bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-md mx-auto overflow-hidden animate-in zoom-in-95 duration-300">
+            {/* Header Section - Compact */}
+            <div className="px-4 sm:px-5 py-4 sm:py-5 bg-gradient-to-br from-red-600 to-red-700 text-white relative">
+                <div className="absolute top-0 right-0 p-3 sm:p-4 opacity-10">
+                    <Plus size={60} className="sm:w-[70px] sm:h-[70px]" />
                 </div>
-            )}
+                <h3 className="text-xl sm:text-2xl font-black tracking-tight mb-1">Initialize Pool</h3>
+                <p className="text-red-100 text-xs font-medium">Define a new funding vector for the foundation</p>
+            </div>
+            
+            <form onSubmit={handleCreatePool} className="p-4 sm:p-5 space-y-4">
+                {/* Pool Name Field */}
+                <div className="space-y-1.5">
+                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest pl-1">
+                        Pool Name
+                    </label>
+                    <Input
+                        required
+                        placeholder="e.g., Youth Education Sanctuary"
+                        className="h-9 rounded-lg border-gray-100 focus:border-red-400 focus:ring-red-400/20 shadow-sm text-sm"
+                        value={newPool.name}
+                        onChange={(e) => setNewPool({ ...newPool, name: e.target.value })}
+                    />
+                    {newPool.name.trim() && (
+                        <div className="flex flex-wrap items-center gap-2 mt-1.5 pl-1">
+                            <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
+                                getPoolDonationType(newPool.name) === 'unrestricted' 
+                                    ? 'bg-blue-50 text-blue-600 border-blue-100' 
+                                    : 'bg-purple-50 text-purple-600 border-purple-100'
+                            }`}>
+                                {getPoolDonationType(newPool.name)}
+                            </span>
+                            <p className="text-[9px] text-gray-400 font-bold">
+                                {getPoolDonationType(newPool.name) === 'unrestricted' 
+                                    ? '→ Universal foundation support' 
+                                    : '→ Specifically targeted funding'}
+                            </p>
+                        </div>
+                    )}
+                </div>
+
+                {/* Initial Target Field */}
+                <div className="space-y-1.5">
+                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest pl-1">
+                        Initial Target (₱)
+                    </label>
+                    <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        className="h-9 rounded-lg border-gray-100 focus:border-red-400 focus:ring-red-400/20 shadow-sm text-sm"
+                        value={newPool.total_amount}
+                        onChange={(e) => setNewPool({ ...newPool, total_amount: e.target.value })}
+                    />
+                </div>
+
+                {/* Core Objectives Field */}
+                <div className="space-y-1.5">
+                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest pl-1">
+                        Core Objectives
+                    </label>
+                    <Textarea
+                        placeholder="Describe the primary mission and expected impact of this pool..."
+                        className="rounded-lg border-gray-100 focus:border-red-400 focus:ring-red-400/20 shadow-sm min-h-[80px] text-sm"
+                        value={newPool.description}
+                        onChange={(e) => setNewPool({ ...newPool, description: e.target.value })}
+                    />
+                </div>
+
+                {/* Modal Footer Actions */}
+                <div className="flex gap-2 pt-2">
+                    <Button 
+                        type="button" 
+                        variant="ghost" 
+                        className="flex-1 h-9 rounded-lg font-bold text-gray-400 hover:text-gray-600 uppercase tracking-widest text-[10px]" 
+                        onClick={() => setIsCreateModalOpen(false)}
+                    >
+                        Cancel
+                    </Button>
+                    <Button 
+                        type="submit" 
+                        className="flex-1 h-9 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold shadow-lg shadow-red-200 uppercase tracking-widest text-[10px] transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100" 
+                        disabled={isSubmitting}
+                    >
+                        {isSubmitting ? 'Processing...' : 'Deploy Pool'}
+                    </Button>
+                </div>
+            </form>
+        </div>
+    </div>
+)}
         </div>
     );
 }

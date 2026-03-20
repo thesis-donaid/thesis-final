@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Roboto, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { getServerSession } from "next-auth";
@@ -7,8 +7,9 @@ import { authOptions } from "@/lib/auth";
 import NavbarWrapper from "@/components/features/NavbarWrapper";
 import FooterWrapper from "@/components/features/FooterWrapper";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const roboto = Roboto({
+  weight: ['100', '300', '400', '500', '700', '900'],
+  variable: "--font-roboto",
   subsets: ["latin"],
 });
 
@@ -26,6 +27,9 @@ export const metadata: Metadata = {
   description: "Personal and social transformation of individuals, families, and communities through faith-driven action.",
 };
 
+import Notification from "@/components/notification/Notification";
+import NavigationLoader from "@/components/ui/NavigationLoader";
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -36,9 +40,11 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${roboto.variable} ${geistMono.variable} antialiased`}
       >
         <Providers session={session}>
+          <NavigationLoader />
+          <Notification />
           <NavbarWrapper />
           {children}
           <FooterWrapper />

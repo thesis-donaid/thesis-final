@@ -10,6 +10,7 @@ import { Button } from '../ui/button';
 import { signOut, useSession } from 'next-auth/react';
 import { hasChildren } from '@/types/links';
 import { Loading } from '../ui/loading';
+import NotificationBell from '../notification/NotificationBell';
 
 export default function Header(){
     const pathname = usePathname();
@@ -42,8 +43,6 @@ export default function Header(){
     }, [])
 
     // Adjust switchMode when pathname changes during render
-    // Uses the "store previous value in state" pattern allowed by React:
-    // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
     if (prevPathname !== pathname) {
         setPrevPathname(pathname);
 
@@ -61,34 +60,9 @@ export default function Header(){
         }
     }
 
-
-    // useEffect(() => {
-    //     const authPrefixes = ['/beneficiary', '/admin', '/profile', '/settings'];
-    //     const isAuthSection = authPrefixes.some(prefix => pathname.startsWith(prefix));
-
-    //     // determine the new mode based on pathname
-    //     let newMode = false;
-    //     if (pathname === '/') {
-    //         newMode = false;
-    //     } else if (isAuthSection) {
-    //         newMode = true;
-    //     } else {
-    //         newMode = switchMode;
-    //     }
-
-    //     // Only update if the value actually changed
-    //     if (newMode !== switchMode) {
-    //         setSwitchMode(newMode);
-    //     }
-
-    //     setLoading(false);
-    // }, [pathname])
-
     useEffect(() => {
         localStorage.setItem('header_switch_mode', JSON.stringify(switchMode));
     }, [switchMode]);
-
-
 
     const translateY = scrollDirection === 'down' ? -100 : 0
 
@@ -136,7 +110,6 @@ export default function Header(){
     };
 
     const user = session?.user;
-    // const links = PUBLIC_LINK;
 
     const links = useMemo(() => {
         if (!mounted || !switchMode) {
@@ -179,39 +152,52 @@ export default function Header(){
         <header className={`fixed flex flex-col top-0 md:top-8 left-0 right-0 z-100 transition-all duration-500 ease-out ${isScrolled ? 'bg-white/98 shadow-lg py-2' : 'bg-white/95 shadow-sm py-3'} backdrop-blur-md border-b border-gray-100`}
             style={{ transform: `translateY(${translateY}%)`}}
         >
-            <nav className='w-full px-3 sm:px-4 flex justify-between items-center gap-8'>
-                {/* Logo */}
-                <Link 
-                    href="/"
-                    className='flex items-center space-x-2 sm:space-x-3 group hover:drop-shadow-xl flex-shrink-0'
-                >
-                    <div className='relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-all duration-300 group-hover:scale-105 flex-shrink-0'>
-                        <Image
-                            src="/logo.jpg"
-                            fill
-                            alt="PNA Logo"
-                            className='w-full h-full object-cover rounded-full ring-2 ring-red-100 group-hover:ring-red-200 transition-all'
-                        />
-                    </div>
+            <nav className='max-w-screen-2xl mx-auto w-full px-3 sm:px-4 flex justify-between items-center h-full'>
+                {/* Logo - Left side (Flex-1 to push the center) */}
+                <div className="flex-1 flex justify-start">
+                    <Link 
+                        href="/"
+                        className='flex items-center space-x-2 sm:space-x-3 group hover:drop-shadow-xl'
+                    >
+                        <div className='relative w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 flex items-center justify-center transition-all duration-300 group-hover:scale-105 flex-shrink-0'>
+                            <Image
+                                src="/logo.jpg"
+                                fill
+                                alt="PNA Logo"
+                                className='w-full h-full object-cover rounded-full ring-2 ring-red-100 group-hover:ring-red-200 transition-all'
+                            />
+                        </div>
 
-                    <div className='transition-all duration-300 group-hover:translate-x-1 truncate'>
-                        <h1 className='text-sm sm:text-base md:text-xl font-bold text-gray-900 truncate'>
-                            Puso ng Ama Foundation
-                        </h1>
-                        <p className='text-[10px] sm:text-xs md:text-sm text-gray-600 flex items-center'>
-                            Spreading love and hope
-                        </p>
-                    </div>
-                </Link>
+                        {/* Full title - visible on large screens */}
+                        <div className='hidden lg:block transition-all duration-300 group-hover:translate-x-1'>
+                            <h1 className='text-sm md:text-base lg:text-xl font-bold text-gray-900 whitespace-nowrap'>
+                                Puso ng Ama Foundation
+                            </h1>
+                            <p className='text-[10px] md:text-xs text-gray-600 hidden sm:block'>
+                                Spreading love and hope
+                            </p>
+                        </div>
+                        
+                        {/* Short version for medium screens */}
+                        <div className='block lg:hidden'>
+                            <h1 className='text-sm font-bold text-gray-900 whitespace-nowrap'>
+                                Puso ng Ama Foundation
+                            </h1>
+                            <p className='text-[10px] md:text-xs text-gray-600 block sm:block'>
+                                Spreading love and hope
+                            </p>
+                        </div>
+                    </Link>
+                </div>
 
-                {/* Desktop Menu */}
-                <div className='hidden md:flex items-center justify-center flex-1 space-x-1'>
+                {/* Desktop Menu - Perfectly Centered */}
+                <div className='hidden lg:flex items-center justify-center space-x-1 px-4'>
                     {links.map((link,index) => (
                         <div key={link.href}
-                            className='relative group'
+                            className='relative group flex-shrink-0'
                         >
                             <Link href={link.href}
-                                className={`relative px-3 lg:px-4 py-2 rounded-lg transition-all duration-300 flex items-center text-sm lg:text-base ${pathname === link.href ? 'text-red-600' : 'text-gray-700'} hover:text-red-400`}
+                                className={`relative px-2 lg:px-3 py-2 rounded-lg transition-all duration-300 flex items-center text-sm ${pathname === link.href ? 'text-red-600' : 'text-gray-700'} hover:text-red-400 whitespace-nowrap`}
                                 onMouseEnter={() => hasChildren(link) && setActiveDropdown(index)}
                                 onMouseLeave={() => hasChildren(link) && setActiveDropdown(null)}
                                 onClick={() => !hasChildren(link) && setActiveDropdown(index)}
@@ -219,20 +205,20 @@ export default function Header(){
                                 {link.label}
                                 {hasChildren(link) && (
                                     <ChevronDown
-                                        className={`ml-1 h-3 w-3 lg:h-4 lg:w-4 transition-transform duration-300 ${activeDropdown === index ? 'rotate-180' : ''}`}
+                                        className={`ml-1 h-3 w-3 transition-transform duration-300 ${activeDropdown === index ? 'rotate-180' : ''}`}
                                     />
                                 )}
                                 {pathname === link.href && (
-                                    <span className='absolute bottom-0 left-3 lg:left-4 right-3 lg:right-4 h-0.5 bg-red-600 rounded-full'></span>
+                                    <span className='absolute bottom-0 left-3 right-3 h-0.5 bg-red-600 rounded-full'></span>
                                 )}
                                 <span className='absolute inset-0 scale-0 rounded-lg bg-red-50 group-hover:scale-100 transition-transform duration-300 -z-10'></span>
                             </Link>
 
                             {/* Dropdown for desktop */}
                             {hasChildren(link) && (
-                                <div className={`absolute top-full left-0 mt-1 w-48 bg-white max-h-100 overflow-y-auto rounded-lg shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 origin-top ${activeDropdown === index ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}
+                                <div className={`absolute top-full left-1/2 -translate-x-1/2 mt-1 w-48 bg-white max-h-100 overflow-y-auto rounded-lg shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 origin-top ${activeDropdown === index ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}
                                 scrollbar-thin scrollbar-thumb-red-300 scrollbar-track-red-50 scrollbar-thumb-rounded-full hover:scrollbar-thumb-red-400
-                                `}>
+                                z-50`}>
                                     {link.children.map((child) => (
                                         <Link key={child.href}
                                             href={child.href}
@@ -250,117 +236,134 @@ export default function Header(){
                     ))}
 
                     {(!user || user.role === "registered") && (
-
                         <Link 
                             href="/donation"
-                            className='ml-2 px-3 lg:px-4 py-2 text-gray-700 cursor-pointer flex items-center justify-center transition-all duration-300 rounded-lg hover:shadow-md transform hover:-translate-y-0.5 hover:bg-red-50'
+                            className='ml-2 px-3 py-2 text-gray-700 cursor-pointer flex items-center justify-center transition-all duration-300 rounded-lg hover:shadow-md transform hover:-translate-y-0.5 hover:bg-red-50 whitespace-nowrap flex-shrink-0'
                         >
-                            <Heart className='text-red-600 h-4 w-4 lg:h-5 lg:w-5'/>
-                            <span className='text-sm lg:text-base font-light ml-1.5'>Donate</span>
+                            <Heart className='text-red-600 h-4 w-4'/>
+                            <span className='text-sm font-light ml-1.5'>Donate</span>
                         </Link>
-                    )
-
-                    }
+                    )}
                 </div>
 
-                {/* Mobile Toggle Button */}
-                <button className='md:hidden p-2 rounded-lg hover:bg-gray-100 transition-all active:bg-gray-200'
-                    onClick={() => setIsOpen(!isOpen)}
-                    aria-label='Toggle menu'
-                >
-                    {isOpen ? (
-                        <X className='h-5 w-5 sm:h-6 sm:w-6 text-red-600 transition-transform duration-100'/>
-                    ): (
-                        <Menu className='h-5 w-5 sm:h-6 sm:w-6 text-gray-700 transition-transform duration-100'/>
-                    )}
-                </button>
-
-                {/* User Section - Desktop */}
-                {user ? (
-                    <div className='hidden md:flex items-center space-x-6 ml-4 relative' ref={logoutDropdownRef}>
-                        <div className="flex items-center space-x-3">
-                            <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                                {switchMode ? 'Switch Original Page' : `Switch ${user.role} Mode`}
-                            </span>
-                            <label className="inline-flex items-center cursor-pointer group">
-                                <input 
-                                    type="checkbox" 
-                                    className="sr-only peer" 
-                                    checked={switchMode}
-                                    onChange={toggleSwitchMode}
-                                />
-                                <div className="relative w-11 h-6 bg-gray-300 rounded-full peer 
-                                                peer-focus:ring-4 peer-focus:ring-red-100 
-                                                peer-checked:after:translate-x-full peer-checked:after:border-white 
-                                                after:content-[''] after:absolute after:top-[2px] after:left-[2px] 
-                                                after:bg-white after:border-gray-300 after:border after:rounded-full 
-                                                after:h-5 after:w-5 after:transition-all 
-                                                peer-checked:bg-red-600">
-                                </div>
-                            </label>
+                {/* Right side controls (Flex-1 to push the center) */}
+                <div className='flex-1 flex items-center justify-end gap-2 sm:gap-3'>
+                    {/* Notification Bell - Desktop */}
+                    {user && (
+                        <div className="hidden md:block">
+                            <NotificationBell />
                         </div>
-                        
-                        <div className="flex items-center space-x-3">
-                            <span className="text-sm font-semibold text-gray-900 truncate max-w-[120px]">
+                    )}
+
+                    {/* Mobile Toggle Button */}
+                    <button className='md:hidden p-2 rounded-lg hover:bg-gray-100 transition-all active:bg-gray-200'
+                        onClick={() => setIsOpen(!isOpen)}
+                        aria-label='Toggle menu'
+                    >
+                        {isOpen ? (
+                            <X className='h-5 w-5 text-red-600 transition-transform duration-100'/>
+                        ): (
+                            <Menu className='h-5 w-5 text-gray-700 transition-transform duration-100'/>
+                        )}
+                    </button>
+
+                    {/* User Section - Desktop */}
+                    {user ? (
+                        <div className='hidden md:flex items-center space-x-2 lg:space-x-3 xl:space-x-4 relative' ref={logoutDropdownRef}>
+                            {/* Mode Switch - Hidden on smaller desktops */}
+                            <div className='hidden lg:flex items-center space-x-2'>
+                                <span className="text-[10px] xl:text-xs font-semibold uppercase tracking-wider text-gray-400 whitespace-nowrap">
+                                    {switchMode ? 'Switch Original' : `${user.role} Mode`}
+                                </span>
+                                <label className="inline-flex items-center cursor-pointer group">
+                                    <input 
+                                        type="checkbox" 
+                                        className="sr-only peer" 
+                                        checked={switchMode}
+                                        onChange={toggleSwitchMode}
+                                    />
+                                    <div className="relative w-9 h-5 bg-gray-300 rounded-full peer 
+                                                    peer-focus:ring-4 peer-focus:ring-red-100 
+                                                    peer-checked:after:translate-x-full peer-checked:after:border-white 
+                                                    after:content-[''] after:absolute after:top-[2px] after:left-[2px] 
+                                                    after:bg-white after:border-gray-300 after:border after:rounded-full 
+                                                    after:h-4 after:w-4 after:transition-all 
+                                                    peer-checked:bg-red-600">
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            {/* User Name - Hidden on smaller desktops */}
+                            <span className="hidden lg:block text-sm font-semibold text-gray-900 truncate max-w-[100px]">
                                 {user?.name}
                             </span>
+                            
                             {/* User Avatar Button */}
                             <button 
                                 onClick={() => setActiveLogoutDropdown(!activeLogoutDropdown)} 
-                                className='hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-red-500 rounded-full'
+                                className='hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-red-500 rounded-full flex-shrink-0'
                                 aria-expanded={activeLogoutDropdown}
                                 aria-haspopup="true"
                             >
-                                <CircleUser className='w-9 h-9 text-red-600'/>
+                                <CircleUser className='w-8 h-8 text-red-600'/>
                             </button>
+
+                            {/* Logout Dropdown */}
+                            {activeLogoutDropdown && (
+                                <div className={`absolute right-0 top-full mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-100 overflow-hidden transition-all duration-200 origin-top-right z-50 ${
+                                    activeLogoutDropdown ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'
+                                }`}
+                                role="menu"
+                                aria-orientation="vertical"
+                                >
+                                    {/* User Info Section */}
+                                    <div className="px-4 py-3 border-b border-gray-100">
+                                        <p className="text-sm font-medium text-gray-900 truncate">{user?.name || 'User'}</p>
+                                        <p className="text-xs text-gray-500 truncate">{user?.email || 'user@example.com'}</p>
+                                    </div>
+
+                                    {/* Menu Items */}
+                                    <div className="p-2">
+                                        <Link
+                                            href="/profile"
+                                            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                                            role="menuitem"
+                                            onClick={() => setActiveLogoutDropdown(false)}
+                                        >
+                                            <User className="w-4 h-4" />
+                                            Profile
+                                        </Link>
+
+                                        <Link
+                                            href="/settings"
+                                            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                                            role="menuitem"
+                                            onClick={() => setActiveLogoutDropdown(false)}
+                                        >
+                                            <Settings className="w-4 h-4" />
+                                            Settings
+                                        </Link>
+
+                                        <div className="border-t border-gray-100 my-2"></div>
+
+                                        <button
+                                            onClick={handleSignOut}
+                                            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                            role="menuitem"
+                                        >
+                                            <LogOut className="w-4 h-4" />
+                                            Sign Out
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-
-                        {/* Logout Dropdown - FIXED: using activeLogoutDropdown instead of activeDropdown */}
-                        {activeLogoutDropdown && (
-                            <div className={`absolute right-0 top-full mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-100 overflow-hidden transition-all duration-200 origin-top-right ${
-                                activeLogoutDropdown ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'
-                            }`}
-                            role="menu"
-                            aria-orientation="vertical"
-                            >
-                                {/* User Info Section */}
-                                <div className="px-4 py-3 border-b border-gray-100">
-                                    <p className="text-sm font-medium text-gray-900">{user?.name || 'User'}</p>
-                                    <p className="text-xs text-gray-500 truncate">{user?.email || 'user@example.com'}</p>
-                                </div>
-
-                                {/* Menu Items */}
-                                <div className="p-2">
-                                    <Link
-                                        href="/profile"
-                                        className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-                                        role="menuitem"
-                                        onClick={() => setActiveLogoutDropdown(false)}
-                                    >
-                                        <User className="w-4 h-4" />
-                                        Profile
-                                    </Link>
-
-
-                                    <div className="border-t border-gray-100 my-2"></div>
-
-                                    <button
-                                        onClick={handleSignOut}
-                                        className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                        role="menuitem"
-                                    >
-                                        <LogOut className="w-4 h-4" />
-                                        Sign Out
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                ) : (
-                    <Button onClick={() => router.push('/login')} className='hidden md:inline-flex text-white px-4 py-2 bg-red-500 hover:bg-red-600 transition-all hover:shadow-md'>
-                        Login
-                    </Button>
-                )}
+                    ) : (
+                        <Button onClick={() => router.push('/login')} className='hidden md:inline-flex text-white px-3 py-1.5 md:px-4 md:py-2 bg-red-500 hover:bg-red-600 transition-all hover:shadow-md text-sm whitespace-nowrap'>
+                            Login
+                        </Button>
+                    )}
+                </div>
             </nav>
 
             {/* Mobile Menu */}
@@ -421,27 +424,32 @@ export default function Header(){
                     ))}
                     
                     {/* Mobile Donate Button */}
-                    <div className='pt-3 mt-2 border-t border-gray-100'>
-                        <Link 
-                            href="/donation"
-                            onClick={handleClick}
-                            className='w-full py-3.5 bg-gradient-to-r from-red-600 to-red-500 text-white rounded-xl hover:from-red-700 hover:to-red-600 transition-all duration-300 font-medium shadow-md flex items-center justify-center active:scale-[0.98]'
-                        >
-                            <Heart className='mr-2 h-5 w-5'/>
-                            Donate Now
-                        </Link>
-                    </div>
+                    {user?.role !== "admin" && user?.role !== "beneficiary" && (
+                        <div className='pt-3 mt-2 border-t border-gray-100'>
+                            <Link 
+                                href="/donation"
+                                onClick={handleClick}
+                                className='w-full py-3.5 bg-gradient-to-r from-red-600 to-red-500 text-white rounded-xl hover:from-red-700 hover:to-red-600 transition-all duration-300 font-medium shadow-md flex items-center justify-center active:scale-[0.98]'
+                            >
+                                <Heart className='mr-2 h-5 w-5'/>
+                                Donate Now
+                            </Link>
+                        </div>
+                    )}
 
                     {/* Mobile User Section */}
                     {user ? (
                         <div className='pt-3 mt-2 border-t border-gray-100 space-y-2'>
                             {/* User info row */}
-                            <div className='flex items-center gap-3 py-2 px-2'>
-                                <CircleUser className='w-8 h-8 text-red-600 shrink-0'/>
-                                <div className='flex-1 min-w-0'>
-                                    <p className='text-sm font-semibold text-gray-900 truncate'>{user?.name}</p>
-                                    <p className='text-xs text-gray-400 truncate'>{user?.email}</p>
+                            <div className='flex items-center justify-between py-2 px-2'>
+                                <div className='flex items-center gap-3 flex-1 min-w-0'>
+                                    <CircleUser className='w-8 h-8 text-red-600 shrink-0'/>
+                                    <div className='flex-1 min-w-0'>
+                                        <p className='text-sm font-semibold text-gray-900 truncate'>{user?.name}</p>
+                                        <p className='text-xs text-gray-400 truncate'>{user?.email}</p>
+                                    </div>
                                 </div>
+                                <NotificationBell />
                             </div>
 
                             {/* Switch mode row */}
@@ -511,7 +519,6 @@ export default function Header(){
                 </div>
             </div>
 
-            {/* Add this to your global CSS file instead */}
             <style>{`
                 @keyframes fadeIn {
                     from {

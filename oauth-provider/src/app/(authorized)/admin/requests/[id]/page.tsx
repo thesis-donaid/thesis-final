@@ -369,29 +369,43 @@ export default function AdminRequestReviewPage() {
                         Back to Dashboard
                     </Link>
 
-                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                        <div>
-                            <div className="flex flex-wrap items-center gap-3 mb-2">
-                                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+                        <div className="space-y-3">
+                            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                                <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
                                     {formatReqId(request.id, request.created_at)}
                                 </h1>
-                                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${statusBadge.className}`}>
-                                    <StatusIcon size={14} />
-                                    {statusBadge.label}
-                                </span>
-                                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${urgency.className}`}>
-                                    <urgency.icon size={14} />
-                                    {urgency.label}
-                                </span>
+                                <div className="flex flex-wrap gap-2">
+                                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold border ${statusBadge.className}`}>
+                                        <StatusIcon size={12} className="sm:w-3.5 sm:h-3.5" />
+                                        {statusBadge.label}
+                                    </span>
+                                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold border ${urgency.className}`}>
+                                        <urgency.icon size={12} className="sm:w-3.5 sm:h-3.5" />
+                                        {urgency.label}
+                                    </span>
+                                </div>
                             </div>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-[11px] sm:text-xs text-gray-400 font-medium">
                                 Submitted {formatDate(request.created_at)}
-                                {request.reviewed_at && ` · Reviewed ${formatDate(request.reviewed_at)}`}
+                                {request.reviewed_at && (
+                                    <>
+                                        <span className="mx-2 text-gray-200">|</span>
+                                        <span className="text-blue-500">Reviewed {formatDate(request.reviewed_at)}</span>
+                                    </>
+                                )}
                             </p>
                         </div>
-                        <div className="text-right">
-                            <div className="text-3xl md:text-4xl font-bold text-gray-900">₱{request.amount.toLocaleString()}</div>
-                            <p className="text-xs text-gray-400 mt-1">Requested Amount</p>
+                        <div className="bg-white px-5 py-4 rounded-2xl border border-gray-100 shadow-sm md:text-right md:min-w-[200px] flex items-center md:items-end justify-between md:flex-col">
+                            <div className="md:order-2">
+                                <div className="text-2xl sm:text-3xl md:text-4xl font-black text-red-600 tracking-tighter leading-none">
+                                    ₱{request.amount.toLocaleString()}
+                                </div>
+                                <p className="text-[10px] text-gray-400 mt-1.5 uppercase font-bold tracking-widest md:text-right">Requested Amount</p>
+                            </div>
+                            <div className="md:order-1 mb-0 md:mb-2 bg-red-50 p-2 rounded-xl text-red-600">
+                                <DollarSign size={20} className="sm:w-6 sm:h-6" />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -418,17 +432,22 @@ export default function AdminRequestReviewPage() {
                                         <p className="text-gray-700 mt-1 whitespace-pre-wrap bg-gray-50 p-3 rounded-lg border border-gray-100">{request.additional_notes}</p>
                                     </div>
                                 )}
-                                <div className="grid grid-cols-2 gap-6 pt-2">
-                                    <div>
-                                        <label className="text-xs text-gray-400 uppercase tracking-wider flex items-center gap-1"><Calendar size={12} /> Date Needed</label>
-                                        <p className="text-gray-900 mt-1 font-medium">{formatDate(request.date_needed)}</p>
-                                        <p className={`text-xs mt-1 ${daysUntilNeeded <= 7 ? 'text-red-500 font-medium' : 'text-gray-400'}`}>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pt-2">
+                                    <div className="bg-gray-50/50 p-3 rounded-xl border border-gray-50">
+                                        <label className="text-[10px] text-gray-400 font-bold uppercase tracking-widest flex items-center gap-1.5 mb-1.5">
+                                            <Calendar size={12} className="text-gray-400" /> Date Needed
+                                        </label>
+                                        <p className="text-gray-900 font-bold text-sm sm:text-base">{formatDate(request.date_needed)}</p>
+                                        <p className={`text-[11px] mt-1 font-bold flex items-center gap-1 ${daysUntilNeeded <= 7 ? 'text-red-500' : 'text-gray-400'}`}>
+                                            <Circle size={4} fill="currentColor" />
                                             {daysUntilNeeded > 0 ? `${daysUntilNeeded} days from now` : daysUntilNeeded === 0 ? 'Today' : `${Math.abs(daysUntilNeeded)} days overdue`}
                                         </p>
                                     </div>
-                                    <div>
-                                        <label className="text-xs text-gray-400 uppercase tracking-wider flex items-center gap-1"><Mail size={12} /> Contact Email</label>
-                                        <p className="text-gray-900 mt-1">{request.email}</p>
+                                    <div className="bg-gray-50/50 p-3 rounded-xl border border-gray-50">
+                                        <label className="text-[10px] text-gray-400 font-bold uppercase tracking-widest flex items-center gap-1.5 mb-1.5">
+                                            <Mail size={12} className="text-gray-400" /> Contact Email
+                                        </label>
+                                        <p className="text-gray-900 font-bold text-sm sm:text-base break-all">{request.email}</p>
                                     </div>
                                 </div>
                             </div>
@@ -676,24 +695,24 @@ export default function AdminRequestReviewPage() {
                                     </div>
                                 </div>
                                 <div className="space-y-3 pt-2 text-sm">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-gray-400 flex items-center gap-1"><Tag size={12} /> Type</span>
-                                        <span className="font-medium text-gray-700 px-3 py-1 bg-red-50 rounded-full text-xs border border-red-200">{request.beneficiary.type.toLowerCase()}</span>
+                                    <div className="flex justify-between items-center py-1 border-b border-gray-50">
+                                        <span className="text-gray-400 flex items-center gap-1.5 font-bold uppercase text-[10px] tracking-widest"><Tag size={12} /> Type</span>
+                                        <span className="font-bold text-gray-700 px-2.5 py-0.5 bg-red-50 rounded-lg text-[10px] border border-red-100 uppercase tracking-tight">{request.beneficiary.type}</span>
                                     </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-gray-400 flex items-center gap-1"><Mail size={12} /> Email</span>
-                                        <span className="text-gray-700">{request.beneficiary.email || request.beneficiary.user.email || '—'}</span>
+                                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-1 border-b border-gray-50 gap-1 sm:gap-0">
+                                        <span className="text-gray-400 flex items-center gap-1.5 font-bold uppercase text-[10px] tracking-widest"><Mail size={12} /> Email</span>
+                                        <span className="text-gray-700 font-medium text-xs break-all sm:text-right">{request.beneficiary.email || request.beneficiary.user.email || '—'}</span>
                                     </div>
                                     {request.beneficiary.phone && (
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-gray-400 flex items-center gap-1"><Phone size={12} /> Phone</span>
-                                            <span className="text-gray-700">{request.beneficiary.phone}</span>
+                                        <div className="flex justify-between items-center py-1 border-b border-gray-50">
+                                            <span className="text-gray-400 flex items-center gap-1.5 font-bold uppercase text-[10px] tracking-widest"><Phone size={12} /> Phone</span>
+                                            <span className="text-gray-700 font-medium text-xs sm:text-base">{request.beneficiary.phone}</span>
                                         </div>
                                     )}
                                     {request.beneficiary.address && (
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-gray-400 flex items-center gap-1"><MapPin size={12} /> Address</span>
-                                            <span className="text-gray-700 text-right max-w-[180px]">{request.beneficiary.address}</span>
+                                        <div className="flex flex-col sm:flex-row sm:justify-between py-1 gap-1 sm:gap-4">
+                                            <span className="text-gray-400 flex items-center gap-1.5 font-bold uppercase text-[10px] tracking-widest shrink-0"><MapPin size={12} /> Address</span>
+                                            <span className="text-gray-700 font-medium text-xs sm:text-right leading-relaxed">{request.beneficiary.address}</span>
                                         </div>
                                     )}
                                 </div>
@@ -778,11 +797,11 @@ export default function AdminRequestReviewPage() {
                                             rows={3}
                                             className="text-sm border-gray-200 focus:border-red-300 focus:ring-red-200 rounded-xl"
                                         />
-                                        <div className="flex gap-2">
+                                        <div className="flex flex-col sm:flex-row gap-2">
                                             <Button
                                                 onClick={() => { setShowRejectForm(false); setRejectionReason(''); }}
                                                 variant="outline"
-                                                className="flex-1 rounded-xl"
+                                                className="w-full sm:flex-1 rounded-xl h-10"
                                                 size="sm"
                                             >
                                                 Cancel
@@ -790,7 +809,7 @@ export default function AdminRequestReviewPage() {
                                             <Button
                                                 onClick={() => handleStatusUpdate('REJECTED')}
                                                 disabled={actionLoading || !rejectionReason.trim()}
-                                                className="flex-1 bg-red-600 hover:bg-red-700 text-white rounded-xl"
+                                                className="w-full sm:flex-1 bg-red-600 hover:bg-red-700 text-white rounded-xl h-10"
                                                 size="sm"
                                             >
                                                 {actionLoading ? <Loader2 size={14} className="animate-spin mr-1" /> : null}
@@ -863,11 +882,11 @@ export default function AdminRequestReviewPage() {
                                                 </span>
                                             </div>
                                         </div>
-                                        <div className="flex gap-2">
+                                        <div className="flex flex-col sm:flex-row gap-2">
                                             <Button
                                                 onClick={() => setShowDisburseForm(false)}
                                                 variant="outline"
-                                                className="flex-1 rounded-xl"
+                                                className="w-full sm:flex-1 rounded-xl h-10"
                                                 size="sm"
                                             >
                                                 Cancel
@@ -875,7 +894,7 @@ export default function AdminRequestReviewPage() {
                                             <Button
                                                 onClick={() => handleStatusUpdate('DISBURSED', { disbursement_method: disbursementMethod })}
                                                 disabled={actionLoading}
-                                                className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-xl"
+                                                className="w-full sm:flex-1 bg-green-600 hover:bg-green-700 text-white rounded-xl h-10"
                                                 size="sm"
                                             >
                                                 {actionLoading ? <Loader2 size={14} className="animate-spin mr-1" /> : <Send size={14} className="mr-1" />}
@@ -908,14 +927,14 @@ export default function AdminRequestReviewPage() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowAllocateForm(false)} />
                     <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-                            <div>
-                                <h3 className="text-xl font-bold text-gray-900">Allocate Funds</h3>
-                                <p className="text-sm text-gray-500">
-                                    {formatReqId(request.id, request.created_at)} · ₱{request.remainingToAllocate.toLocaleString()} remaining
+                        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 sm:px-6 py-4 flex justify-between items-center">
+                            <div className="min-w-0 pr-4">
+                                <h3 className="text-lg sm:text-xl font-black text-gray-900 truncate">Allocate Funds</h3>
+                                <p className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-widest truncate">
+                                    ₱{request.remainingToAllocate.toLocaleString()} remaining
                                 </p>
                             </div>
-                            <button onClick={() => setShowAllocateForm(false)} className="text-gray-400 hover:text-gray-600">
+                            <button onClick={() => setShowAllocateForm(false)} className="text-gray-400 hover:text-red-500 transition-colors shrink-0">
                                 <XCircle size={24} />
                             </button>
                         </div>
@@ -1078,15 +1097,14 @@ export default function AdminRequestReviewPage() {
                                 </div>
                             </div>
 
-                            {/* Actions */}
-                            <div className="flex gap-3 pt-2">
-                                <Button type="button" variant="outline" className="flex-1 rounded-xl h-11" onClick={() => setShowAllocateForm(false)}>
+                            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                                <Button type="button" variant="outline" className="w-full sm:flex-1 rounded-xl h-11 font-bold text-gray-500" onClick={() => setShowAllocateForm(false)}>
                                     Cancel
                                 </Button>
                                 <Button
                                     onClick={handleAllocate}
                                     disabled={actionLoading || !disbursementDate || allocations.some(a => !a.amount || parseFloat(a.amount) <= 0)}
-                                    className="flex-1 bg-red-600 hover:bg-red-700 text-white rounded-xl h-11"
+                                    className="w-full sm:flex-1 bg-red-600 hover:bg-red-700 text-white rounded-xl h-11 font-bold shadow-lg shadow-red-200"
                                 >
                                     {actionLoading ? <Loader2 size={18} className="animate-spin mr-2" /> : <Send size={18} className="mr-2" />}
                                     Confirm Allocation

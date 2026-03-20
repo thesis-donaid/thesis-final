@@ -165,15 +165,56 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      // Trigger Pusher for Admin
+      // Persistent & Real-time Notifications
       try {
-        await pusherServer.trigger("admin-events", "donation-received", {
-          amount: donation.amount,
-          donorName: donation.guestDonor?.email || donation.registeredDonor?.user?.name || "Anonymous",
-          type: donation.donation_type,
+        // 1. Notify all Admins
+        const admins = await prisma.user.findMany({
+          where: { role: 'admin' },
+          select: { id: true }
         });
-      } catch (pusherError) {
-        console.error("Pusher admin trigger failed:", pusherError);
+
+        const donorName = donation.guestDonor?.email || donation.registeredDonor?.user?.name || "Anonymous";
+        const adminNotification = {
+          title: "New Donation Received",
+          message: `Received ₱${donation.amount.toLocaleString()} from ${donorName}`,
+          type: 'donation',
+          link: '/admin'
+        };
+
+        // Create DB notifications for admins
+        await prisma.userNotification.createMany({
+          data: admins.map(admin => ({
+            userId: admin.id,
+            ...adminNotification,
+          }))
+        });
+
+        // Trigger Pusher for admins
+        for (const admin of admins) {
+          await pusherServer.trigger(`user-${admin.id}`, 'notification', adminNotification);
+        }
+
+        // 2. Notify Registered Donor
+        if (donation.registeredDonor?.userId) {
+          const donorNotification = {
+            title: "Donation Successful",
+            message: `Thank you! Your donation of ₱${donation.amount.toLocaleString()} has been received.`,
+            type: 'donation',
+            link: '/donor'
+          };
+
+          await prisma.userNotification.create({
+            data: {
+              userId: donation.registeredDonor.userId,
+              ...donorNotification
+            }
+          });
+
+          await pusherServer.trigger(`user-${donation.registeredDonor.userId}`, 'notification', donorNotification);
+        }
+
+      } catch (notifyError) {
+        console.error("Persistent notification failed in webhook:", notifyError);
       }
 
       // TODO: Save to blockchain here

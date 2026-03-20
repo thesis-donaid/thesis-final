@@ -4,6 +4,7 @@
 
 import { SessionProvider } from "next-auth/react";
 import { Session } from "next-auth";
+import { NotificationProvider } from "@/context/NotificationContext";
 import NavigationLoader from "./ui/NavigationLoader";
 
 
@@ -20,8 +21,10 @@ export function Providers({ children, session }: ProvidersProps) {
             refetchInterval={0}
             refetchOnWindowFocus={false}
         >
-            <NavigationLoader />
-            {children}
+            <NotificationProvider>
+                <NavigationLoader />
+                {children}
+            </NotificationProvider>
         </SessionProvider>
     );
 }

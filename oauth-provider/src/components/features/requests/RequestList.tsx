@@ -134,7 +134,7 @@ export default function RequestList({ requests, isAdmin, onRefresh }: RequestLis
     }
 
     return (
-        <div className="divide-y divide-gray-100">
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-3 p-3 md:p-0 md:gap-0 md:divide-y md:divide-gray-100">
             {requests.map((request) => {
                 const isExpanded = expandedId === request.id;
                 const statusBadge = statusConfig[request.status] ?? statusConfig.PENDING;
@@ -146,69 +146,137 @@ export default function RequestList({ requests, isAdmin, onRefresh }: RequestLis
                 });
 
                 return (
-                    <div key={request.id} className="transition-colors hover:bg-gray-50/50">
-                        {/* Main Row */}
-                        <button
-                            onClick={() => setExpandedId(isExpanded ? null : request.id)}
-                            className="w-full flex items-center justify-between px-6 py-5 text-left"
-                        >
-                            <div className="space-y-2 min-w-0 flex-1 pr-4">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="text-base font-semibold text-gray-900 truncate max-w-[300px]">
-                                        {request.purpose}
-                                    </span>
-                                    <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${statusBadge.className}`}>
-                                        {statusBadge.label}
-                                    </span>
-                                    <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${urgencyBadge.className}`}>
-                                        {urgencyBadge.label}
-                                    </span>
-                                    {receiptBadge && (
-                                        <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${receiptBadge.className}`}>
-                                            {receiptBadge.label}
+                    <div key={request.id} className="transition-all duration-200 w-full">
+                        {/* Main Interaction Area */}
+                        <div className={`
+                            relative overflow-hidden transition-all duration-200
+                            md:hover:bg-gray-50/50 
+                            ${isExpanded ? 'md:bg-gray-50/80' : ''}
+                        `}>
+                            {/* Desktop Row Layout */}
+                            <button
+                                onClick={() => setExpandedId(isExpanded ? null : request.id)}
+                                className="hidden md:flex w-full items-center justify-between px-6 py-5 text-left"
+                            >
+                                <div className="space-y-2 min-w-0 flex-1 pr-4">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="text-base font-semibold text-gray-900 truncate max-w-[300px]">
+                                            {request.purpose}
                                         </span>
+                                        <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${statusBadge.className}`}>
+                                            {statusBadge.label}
+                                        </span>
+                                        <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${urgencyBadge.className}`}>
+                                            {urgencyBadge.label}
+                                        </span>
+                                        {receiptBadge && (
+                                            <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${receiptBadge.className}`}>
+                                                {receiptBadge.label}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-gray-400">
+                                        <span>{date}</span>
+                                        <span className="mx-1">•</span>
+                                        <span className="font-mono text-gray-500 font-bold">REQ-{String(request.id).padStart(3, '0')}</span>
+                                        <span className="mx-1">•</span>
+                                        <span>Needed by {new Date(request.date_needed).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                    </p>
+                                    {isAdmin && request.beneficiary && (
+                                        <p className="text-xs text-gray-500 font-medium">
+                                            By: <span className="text-gray-900">{request.beneficiary.firstName} {request.beneficiary.lastName}</span> (@{request.beneficiary.username})
+                                        </p>
                                     )}
                                 </div>
-                                <p className="text-xs text-gray-400">
-                                    <span>{date}</span>
-                                    <span className="mx-1">•</span>
-                                    <span className="font-mono">REQ-{String(request.id).padStart(3, '0')}</span>
-                                    <span className="mx-1">•</span>
-                                    <span>Needed by {new Date(request.date_needed).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                                </p>
-                                {isAdmin && request.beneficiary && (
-                                    <p className="text-xs text-gray-400">
-                                        By: {request.beneficiary.firstName} {request.beneficiary.lastName} (@{request.beneficiary.username})
-                                    </p>
-                                )}
-                            </div>
 
-                            <div className="flex items-center gap-4 shrink-0">
-                                {isAdmin && (
-                                    <Link
-                                        href={`/admin/requests/${request.id}`}
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors group"
-                                        title="View Full Details"
-                                    >
-                                        <Eye size={18} className="group-hover:scale-110 transition-transform" />
-                                    </Link>
-                                )}
-                                <div className="text-right">
-                                    <p className="text-lg font-bold text-gray-900">
-                                        ₱{request.amount.toLocaleString()}
-                                    </p>
-                                    <p className="text-[11px] text-gray-400">{request.documents.length} document(s)</p>
+                                <div className="flex items-center gap-4 shrink-0">
+                                    {isAdmin && (
+                                        <Link
+                                            href={`/admin/requests/${request.id}`}
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors group"
+                                            title="View Full Details"
+                                        >
+                                            <Eye size={18} className="group-hover:scale-110 transition-transform" />
+                                        </Link>
+                                    )}
+                                    <div className="text-right">
+                                        <p className="text-lg font-black text-gray-900 tracking-tight">
+                                            ₱{request.amount.toLocaleString()}
+                                        </p>
+                                        <p className="text-[11px] text-gray-400 uppercase font-bold tracking-wider">{request.documents.length} document(s)</p>
+                                    </div>
+                                    <div className={`p-1 rounded-full transition-colors ${isExpanded ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-500'}`}>
+                                        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                    </div>
                                 </div>
-                                <div className="p-1 rounded-full bg-gray-100 text-gray-500">
-                                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                            </button>
+
+                            {/* Mobile Card Layout */}
+                            <button
+                                onClick={() => setExpandedId(isExpanded ? null : request.id)}
+                                className={`
+                                    md:hidden flex flex-col w-full text-left p-3.5 rounded-2xl border transition-all duration-200
+                                    ${isExpanded 
+                                        ? 'bg-white border-red-200 shadow-md ring-1 ring-red-50' 
+                                        : 'bg-white border-gray-100 shadow-sm active:scale-[0.98]'
+                                    }
+                                `}
+                            >
+                                <div className="flex justify-between items-start mb-2 gap-2">
+                                    <span className="font-mono text-[8px] font-black text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded">
+                                        #{String(request.id).padStart(3, '0')}
+                                    </span>
+                                    <div className="flex flex-wrap justify-end gap-1">
+                                        <span className={`text-[7px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded-md ${urgencyBadge.className}`}>
+                                            {urgencyBadge.label}
+                                        </span>
+                                        <span className={`text-[7px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded-md ${statusBadge.className}`}>
+                                            {statusBadge.label}
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
-                        </button>
+
+                                <div className="mb-3 flex-1">
+                                    <h4 className="text-xs font-black text-gray-900 leading-tight mb-1">
+                                        {request.purpose}
+                                    </h4>
+                                    {isAdmin && request.beneficiary && (
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-[10px] text-gray-500 font-bold">
+                                                {request.beneficiary.firstName} {request.beneficiary.lastName}
+                                            </p>
+                                            <Link
+                                                href={`/admin/requests/${request.id}`}
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="text-[9px] font-black text-red-600 flex items-center gap-1 hover:underline"
+                                            >
+                                                Details <ExternalLink size={10} />
+                                            </Link>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="flex items-end justify-between mt-auto pt-2 border-t border-gray-50">
+                                    <div>
+                                        <p className="text-[7px] text-gray-400 font-black uppercase tracking-widest leading-none mb-0.5">Amount</p>
+                                        <p className="text-[13px] font-black text-red-600 tracking-tight leading-none">
+                                            ₱{request.amount.toLocaleString()}
+                                        </p>
+                                    </div>
+                                    <div className={`items-center gap-2 flex text-[8px] text-gray-400 font-bold uppercase`}>
+                                        <span>{date}</span>
+                                        <div className={`p-1 rounded-full ${isExpanded ? 'bg-red-50 text-red-500' : 'bg-gray-50 text-gray-400'}`}>
+                                            {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                                        </div>
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
 
                         {/* Expanded Details */}
                         {isExpanded && (
-                            <div className="px-6 pb-6 space-y-5">
+                            <div className="px-4 md:px-6 pb-6 space-y-5">
                                 {/* Timeline */}
                                 <div className="bg-gray-50 rounded-xl p-4 space-y-3 border border-gray-100">
                                     <div className="flex items-center gap-2 text-xs text-gray-500">
@@ -293,26 +361,24 @@ export default function RequestList({ requests, isAdmin, onRefresh }: RequestLis
                                             Cancel Request
                                         </button>
                                     )}
-                                    {request.receipt_status !== "COMPLETED" && !isAdmin && (
-                                        <Link
-                                            href={`/beneficiary/requests/${request.id}`}
-                                            className={`text-xs font-semibold px-4 py-2 rounded-lg transition-colors ${
-                                                request.status === 'DISBURSED'
-                                                    ? 'text-white bg-green-600 hover:bg-green-700'
-                                                    : 'text-white bg-gray-900 hover:bg-gray-800'
-                                            }`}
-                                        >
-                                            {request.status === 'DISBURSED' ? 'Submit Receipt' : 'View Details'}
-                                        </Link>
-                                    )}
+                                    <Link
+                                        href={isAdmin ? `/admin/requests/${request.id}` : `/beneficiary/requests/${request.id}`}
+                                        className={`text-xs font-semibold px-4 py-2 rounded-lg transition-colors ${
+                                            !isAdmin && request.status === 'DISBURSED'
+                                                ? 'text-white bg-green-600 hover:bg-green-700'
+                                                : 'text-white bg-gray-900 hover:bg-gray-800'
+                                        }`}
+                                    >
+                                        {isAdmin ? 'View Full Details' : (request.status === 'DISBURSED' ? 'Submit Receipt' : 'View Details')}
+                                    </Link>
                                 </div>
 
                                 {/* Admin Actions */}
                                 {isAdmin && request.status !== "DISBURSED" && (
-                                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                                        <h4 className="text-xs font-semibold text-gray-700 mb-3">Update Status</h4>
-                                        <div className="flex flex-wrap gap-3 items-end">
-                                            <div>
+                                    <div className="bg-gray-50 p-3 md:p-4 rounded-xl border border-gray-100">
+                                        <h4 className="text-xs font-black text-gray-700 uppercase tracking-wider mb-3">Update Status</h4>
+                                        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
+                                            <div className="flex-1">
                                                 <label className="block text-[11px] text-gray-500 mb-1">New Status</label>
                                                 <select
                                                     value={updateForm.status}
