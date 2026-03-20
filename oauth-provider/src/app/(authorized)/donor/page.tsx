@@ -15,6 +15,7 @@ import {
     ChevronDown,
     ChevronUp,
     Sparkles,
+    ShieldCheck,
     Receipt,
     Wallet
 } from 'lucide-react';
@@ -193,6 +194,12 @@ export default function DonorDashboard() {
                         <p className="text-sm text-gray-500 mt-1">Track your donations and impact</p>
                     </div>
                     <div className="flex items-center gap-3">
+                        <Link href="/donor/ledger">
+                            <Button variant="outline" className="flex items-center gap-2 border-gray-200 text-indigo-600 hover:bg-indigo-50 border-indigo-100 bg-indigo-50/30">
+                                <ShieldCheck size={16} />
+                                Transparency Ledger
+                            </Button>
+                        </Link>
                         <Link href="/donor/impacts">
                             <Button variant="outline" className="flex items-center gap-2 border-gray-200 text-gray-600 hover:bg-gray-50">
                                 <Sparkles size={16} />

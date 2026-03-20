@@ -2,6 +2,7 @@ import { getAvailableFunds } from "@/lib/allocation";
 import { authOptions } from "@/lib/auth";
 import { sendDisbursementNotificationEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
+import { pusherServer } from "@/lib/pusher";
 import { recordProofOnChain } from "@/blockchain/service";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
@@ -200,6 +201,22 @@ export async function PATCH(
                 },
             },
         });
+
+        // Real-time notification via Pusher
+        try {
+            await pusherServer.trigger(
+                `beneficiary-${updated.beneficiary.userId}`,
+                "request-updated",
+                {
+                    requestId: updated.id,
+                    status: updated.status,
+                    purpose: updated.purpose,
+                    amount: updated.amount,
+                }
+            );
+        } catch (pusherError) {
+            console.error("Pusher trigger failed:", pusherError);
+        }
 
         // Send disbursement notifications
         if (status === "DISBURSED") {
@@ -442,6 +459,10 @@ export async function PUT(
                                 explorer_url: result.explorerUrl,
                                 gas_used: result.gasUsed,
                                 status: "confirmed",
+                                purpose: fullRequest.purpose,
+                                proof_url: proofUrl,
+                                proof_hash: proofUrl, // Using URL as hash for now matching recordProofOnChain
+                                proof_type: "receipt",
                             },
                         });
                     } else {

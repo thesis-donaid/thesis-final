@@ -246,6 +246,10 @@ model BeneficiaryRequest {
   documents RequestDocument[]
   allocations Allocation[]
   receipts  DisbursementReceipt[]
+
+  // Blockchain transparency
+  blockchainLedgers BlockchainLedger[]
+
   @@map("beneficiary_requests")
 }
 
@@ -367,16 +371,7 @@ enum FundSourceType {
   RESTRICTED
 }
 
-// Tracks unrestricted fund balance
-model UnrestrictedFund {
-  id Int @id @default(autoincrement())
-  total_received Float @default(0)
-  total_allocated Float @default(0)
-  available_balance Float @default(0)
-  updated_at DateTime @updatedAt
 
-  @@map("unrestricted_fund")
-}
 
 
 
@@ -412,6 +407,9 @@ model Allocation {
   // Track linked donations for donor notification
   donationAllocations DonationAllocation[]
 
+  // Blockchain transparency
+  blockchainLedgers BlockchainLedger[]
+
   @@map("allocations")
 }
 
@@ -445,14 +443,25 @@ model DonationAllocation {
 // ============================================
 model BlockchainLedger {
   id Int @id @default(autoincrement())
-  allocation_id Int
+  allocation_id Int @unique
+  allocation Allocation @relation(fields: [allocation_id], references: [id])
+  
   request_id Int
+  request BeneficiaryRequest @relation(fields: [request_id], references: [id])
+
   tx_hash String
   block_number Int?
   network String
   explorer_url String?
   gas_used String?
   status String @default("confirmed")
+  
+  // Proof Data (matching what was sent on-chain)
+  purpose String?
+  proof_url String?
+  proof_hash String?
+  proof_type String?
+
   recorded_at DateTime @default(now())
 
   @@index([allocation_id])

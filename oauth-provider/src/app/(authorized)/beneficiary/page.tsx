@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -11,9 +11,11 @@ import {
   XCircle,
   AlertTriangle,
   PiggyBank,
+  Bell,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { pusherClient } from '@/lib/pusher-client';
 
 interface BeneficiaryRequest {
     id: number;
@@ -48,7 +50,7 @@ const receiptStatusConfig: Record<string, { label: string; className: string }> 
     MISSING: { label: 'missing', className: 'bg-red-50 text-red-600 border border-red-100' }, 
 }
 
-type Tab = 'active' | 'approved' | 'all';
+type Tab = 'active' | 'under review' | 'approved' | 'disbursed' | 'all';
 
 function formatReqId(id: number, createdAt: string) {
     const year = new Date(createdAt).getFullYear();
@@ -61,18 +63,11 @@ export default function BeneficiaryDashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [activeTab, setActiveTab] = useState<Tab>('active');
+    const [notification, setNotification] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (authStatus !== 'authenticated') {
-            if (authStatus !== 'loading') setLoading(false);
-            return;
-        }
-        fetchRequests();
-    }, [authStatus]);
-
-    const fetchRequests = async () => {
+    const fetchRequests = React.useCallback(async (silent = false) => {
         try {
-            setLoading(true);
+            if (!silent) setLoading(true);
             const res = await fetch('/api/beneficiary/requests');
             const data = await res.json();
             if (Array.isArray(data)) {
@@ -85,7 +80,33 @@ export default function BeneficiaryDashboard() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        if (authStatus !== 'authenticated' || !session?.user?.id) {
+            if (authStatus !== 'loading') setLoading(false);
+            return;
+        }
+
+        fetchRequests();
+
+        // Pusher Real-time Listener
+        const channel = pusherClient.subscribe(`beneficiary-${session.user.id}`);
+
+        channel.bind("request-updated", (data: { requestId: number; status: string; purpose: string }) => {
+            // Show notification
+            setNotification(`Request "${data.purpose}" has been updated to ${data.status}`);
+            setTimeout(() => setNotification(null), 5000);
+            
+            // Silent refresh
+            fetchRequests(true);
+        });
+
+        return () => {
+            channel.unbind_all();
+            pusherClient.unsubscribe(`beneficiary-${session.user.id}`);
+        };
+    }, [authStatus, session?.user?.id, fetchRequests]);
 
     const pendingCount   = requests.filter(r => r.status === 'PENDING').length;
     const reviewCount    = requests.filter(r => r.status === 'UNDER_REVIEW').length;
@@ -97,7 +118,9 @@ export default function BeneficiaryDashboard() {
 
     const filteredRequests = requests.filter(r => {
         if (activeTab === 'active')   return r.status === 'PENDING' || r.status === 'UNDER_REVIEW';
-        if (activeTab === 'approved') return r.status === 'APPROVED' || r.status === 'DISBURSED';
+        if (activeTab === 'under review') return r.status === 'UNDER_REVIEW';
+        if (activeTab === 'approved') return r.status === 'APPROVED';
+        if (activeTab === 'disbursed') return r.status === 'DISBURSED';
         return true;
     });
 
@@ -105,8 +128,10 @@ export default function BeneficiaryDashboard() {
     const completedCount = approvedCount + disbursedCount;
 
     const tabs: { key: Tab; label: string }[] = [
-        { key: 'active',   label: `Active (${activeCount})` },
-        { key: 'approved', label: `Approved (${completedCount})` },
+        { key: 'active',   label: `Pending (${activeCount})` },
+        { key: 'under review', label: `Under Review (${reviewCount})` },
+        { key: 'approved', label: `Approved (${approvedCount})` }, 
+        { key: 'disbursed', label: `Disbursed (${disbursedCount})` },
         { key: 'all',      label: 'All Requests' },
     ];
 
@@ -189,6 +214,15 @@ export default function BeneficiaryDashboard() {
                     </Link>
                 </div>
 
+                {/* Real-time Notification Banner */}
+                {notification && (
+                    <div className="bg-blue-50 border border-blue-200 text-blue-700 px-6 py-4 rounded-xl flex items-center gap-3 animate-in fade-in transition-all">
+                        <Bell className="w-5 h-5 shrink-0" />
+                        <p className="font-medium text-sm flex-1">{notification}</p>
+                        <button onClick={() => setNotification(null)} className="text-blue-400 hover:text-blue-600 text-sm font-bold">✕</button>
+                    </div>
+                )}
+
                 {error && (
                     <div className="p-3 bg-red-50 border border-red-100 text-red-600 rounded-lg text-sm flex items-center gap-2">
                         <AlertTriangle size={15} /> {error}
@@ -196,7 +230,7 @@ export default function BeneficiaryDashboard() {
                 )}
 
                 {/* Stat Cards */}
-                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     {statCards.map((card) => (
                         <div key={card.label} className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm flex items-start justify-between">
                             <div className="space-y-1">

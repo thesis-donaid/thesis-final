@@ -15,12 +15,26 @@ import {
   UserPlus,
   BarChart3,
   Search,
-  Eye
+  Eye,
+  ShieldCheck,
+  Bell,
+  Sparkles
 } from 'lucide-react';
+import { pusherClient } from '@/lib/pusher-client';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import {
+    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    PieChart, Pie, Cell, BarChart, Bar, Legend
+} from 'recharts';
 
 // === Types ===
+
+interface ChartData {
+    donationTrends: { date: string; amount: number }[];
+    requestDistribution: { name: string; value: number }[];
+    poolAnalytics: { name: string; allocated: number; available: number; total: number }[];
+}
 
 interface Request {
     id: number;
@@ -87,6 +101,8 @@ type MainTab = 'donations' | 'requests' | 'pools';
 type RequestsSubTab = 'all' | 'pending' | 'under_review' | 'approved' | 'disbursed' | 'receipt_proof' | 'rejected';
 type DonationsSubTab = 'all' | 'pending' | 'completed';
 
+const CHART_COLORS = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899'];
+
 // === Configs ===
 
 const urgencyConfig: Record<string, { label: string; className: string }> = {
@@ -123,6 +139,7 @@ export default function AdminDashboard() {
     const [donations, setDonations] = useState<Donation[]>([]);
     const [pools, setPools] = useState<Pool[]>([]);
     const [stats, setStats] = useState<Stats | null>(null);
+    const [chartData, setChartData] = useState<ChartData | null>(null);
     
     // UI states
     const [loading, setLoading] = useState(true);
@@ -130,6 +147,57 @@ export default function AdminDashboard() {
     const [mainTab, setMainTab] = useState<MainTab>('requests');
     const [reqSubTab, setReqSubTab] = useState<RequestsSubTab>('pending');
     const [donSubTab, setDonSubTab] = useState<DonationsSubTab>('all');
+    const [notification, setNotification] = useState<string | null>(null);
+
+    const fetchDashboardData = React.useCallback(async (silent = false) => {
+        try {
+            if (!silent) setLoading(true);
+            const [statsRes, reqRes, donRes, poolsRes] = await Promise.all([
+                fetch('/api/admin/stats'),
+                fetch('/api/admin/requests?limit=200'),
+                fetch('/api/admin/donations?limit=200'),
+                fetch('/api/pools/create')
+            ]);
+
+            if (!statsRes.ok || !reqRes.ok || !donRes.ok || !poolsRes.ok) {
+                throw new Error('Failed to fetch dashboard data');
+            }
+
+            const statsData = await statsRes.json();
+            const reqData = await reqRes.json();
+            const donData = await donRes.json();
+            const poolsData = await poolsRes.json();
+
+            const allRequests: Request[] = reqData.data?.requests ?? [];
+            setRequests(allRequests);
+            setDonations(donData.data?.donations ?? []);
+            setPools(poolsData.data ?? []);
+            setChartData(statsData.charts);
+
+            const totalAllocations = allRequests.filter(r => r.allocations && r.allocations.length > 0).length;
+
+            setStats({
+                pendingCount: allRequests.filter(r => r.status === 'PENDING' || r.status === 'UNDER_REVIEW').length,
+                approvedCount: allRequests.filter(r => r.status === 'APPROVED' || r.status === 'ALLOCATED').length,
+                totalAllocations,
+                totalAllocatedFunds: statsData.stats?.totalAllocatedFunds ?? 0,
+                totalDisbursed: statsData.stats?.totalDisbursed ?? 0,
+                availableFunds: statsData.stats?.availableFunds ?? 0,
+                totalRequests: statsData.stats?.totalRequests ?? 0,
+                totalDonations: statsData.stats?.totalDonations ?? 0,
+                totalNetDonations: statsData.stats?.totalNetDonations ?? 0,
+                totalRegisteredDonors: statsData.stats?.totalRegisteredDonors ?? 0,
+                totalGuestDonors: statsData.stats?.totalGuestDonors ?? 0,
+                totalBeneficiaries: statsData.stats?.totalBeneficiaries ?? 0,
+                activePools: statsData.stats?.activePools ?? 0,
+            });
+        } catch (err) {
+            console.error(err);
+            setError('Failed to load dashboard data.');
+        } finally {
+            setLoading(false);
+        }
+    }, []);
 
     useEffect(() => {
         if (authStatus !== 'authenticated' || session?.user?.role !== 'admin') {
@@ -137,65 +205,30 @@ export default function AdminDashboard() {
             return;
         }
 
-        const fetchData = async () => {
-            try {
-                setLoading(true);
-                const [statsRes, reqRes, donRes, poolsRes] = await Promise.all([
-                    fetch('/api/admin/stats'),
-                    fetch('/api/admin/requests?limit=200'),
-                    fetch('/api/admin/donations?limit=200'),
-                    fetch('/api/pools/create') // Using the get endpoint via GET
-                ]);
+        fetchDashboardData();
 
-                if (!statsRes.ok || !reqRes.ok || !donRes.ok || !poolsRes.ok) {
-                    throw new Error('Failed to fetch dashboard data');
-                }
+        // Pusher Real-time Listener for Admin
+        const channel = pusherClient.subscribe('admin-events');
 
-                const statsData = await statsRes.json();
-                const reqData = await reqRes.json();
-                const donData = await donRes.json();
-                const poolsData = await poolsRes.json();
+        channel.bind('new-request', (data: { beneficiaryName: string; purpose: string }) => {
+            // Show notification toast
+            setNotification(`New request from ${data.beneficiaryName}: "${data.purpose}"`);
+            setTimeout(() => setNotification(null), 8000);
 
-                // Process Requests
-                const allRequests: Request[] = reqData.data?.requests ?? [];
-                setRequests(allRequests);
+            // Silent refresh of all data
+            fetchDashboardData(true);
+        });
 
-                // Process Donations
-                const allDonations: Donation[] = donData.data?.donations ?? [];
-                setDonations(allDonations);
+        // Also listen for donations (optional but good for future)
+        channel.bind('donation-received', () => {
+            fetchDashboardData(true);
+        });
 
-                // Process Pools
-                setPools(poolsData.data ?? []);
-
-                // Process Stats
-                const totalAllocations = allRequests.filter(r => r.allocations && r.allocations.length > 0).length;
-                
-                setStats({
-                    pendingCount: allRequests.filter(r => r.status === 'PENDING' || r.status === 'UNDER_REVIEW').length,
-                    approvedCount: allRequests.filter(r => r.status === 'APPROVED' || r.status === 'ALLOCATED').length,
-                    totalAllocations,
-                    totalAllocatedFunds: statsData.stats?.totalAllocatedFunds ?? 0,
-                    totalDisbursed: statsData.stats?.totalDisbursed ?? 0,
-                    availableFunds: statsData.stats?.availableFunds ?? 0,
-                    totalRequests: statsData.stats?.totalRequests ?? 0,
-                    totalDonations: statsData.stats?.totalDonations ?? 0,
-                    totalNetDonations: statsData.stats?.totalNetDonations ?? 0,
-                    totalRegisteredDonors: statsData.stats?.totalRegisteredDonors ?? 0,
-                    totalGuestDonors: statsData.stats?.totalGuestDonors ?? 0,
-                    totalBeneficiaries: statsData.stats?.totalBeneficiaries ?? 0,
-                    activePools: statsData.stats?.activePools ?? 0,
-                });
-
-            } catch (err) {
-                console.error(err);
-                setError('Failed to load dashboard data.');
-            } finally {
-                setLoading(false);
-            }
+        return () => {
+            channel.unbind_all();
+            pusherClient.unsubscribe('admin-events');
         };
-
-        fetchData();
-    }, [authStatus, session]);
+    }, [authStatus, session, fetchDashboardData]);
 
     // Filtering logic
     const filteredRequests = requests.filter(r => {
@@ -260,10 +293,31 @@ export default function AdminDashboard() {
             <div className="max-w-7xl mx-auto space-y-6">
 
                 {/* Header */}
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-                    <p className="text-sm text-gray-500 mt-1">Comprehensive overview of platform operations</p>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+                        <p className="text-sm text-gray-500 mt-1">Comprehensive overview of platform operations</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <Link href="/admin/ledger">
+                            <Button variant="outline" className="flex items-center gap-2 border-gray-200 text-indigo-600 hover:bg-indigo-50 border-indigo-100 bg-indigo-50/30">
+                                <ShieldCheck size={16} />
+                                Transparency Ledger
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
+
+                {/* Real-time Notification */}
+                {notification && (
+                    <div className="bg-red-50 border border-red-100 text-red-700 px-6 py-4 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 transition-all shadow-sm">
+                        <div className="bg-red-600 p-2 rounded-lg">
+                            <Bell className="w-5 h-5 text-white animate-bounce" />
+                        </div>
+                        <p className="font-bold flex-1">{notification}</p>
+                        <button onClick={() => setNotification(null)} className="text-red-400 hover:text-red-600 text-sm font-black">✕</button>
+                    </div>
+                )}
 
                 {error && (
                     <div className="p-3 bg-red-50 border border-red-100 text-red-600 rounded-lg text-sm">
@@ -285,6 +339,81 @@ export default function AdminDashboard() {
                         </div>
                     ))}
                 </div>
+
+                {/* Analytics Charts Section */}
+                {chartData && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+                        {/* Donation Trends */}
+                        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Donation Trends (Last 30 Days)</h3>
+                                <Sparkles className="w-4 h-4 text-amber-500" />
+                            </div>
+                            <div className="h-[300px] w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <LineChart data={chartData.donationTrends}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                                        <XAxis dataKey="date" fontSize={12} tickLine={false} axisLine={false} tick={{fill: '#9ca3af'}} />
+                                        <YAxis fontSize={12} tickLine={false} axisLine={false} tick={{fill: '#9ca3af'}} tickFormatter={(v) => `₱${(v/1000)}k`} />
+                                        <Tooltip 
+                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                            formatter={(v: any) => [`₱${Number(v).toLocaleString()}`, 'Amount']}
+                                        />
+                                        <Line type="monotone" dataKey="amount" stroke="#EF4444" strokeWidth={3} dot={{ r: 4, fill: '#EF4444', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-6">
+                            {/* Request Status Distribution */}
+                            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
+                                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-6">Request Distribution</h3>
+                                <div className="h-[250px] w-full flex items-center">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie
+                                                data={chartData.requestDistribution}
+                                                innerRadius={60}
+                                                outerRadius={80}
+                                                paddingAngle={5}
+                                                dataKey="value"
+                                            >
+                                                {chartData.requestDistribution.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip 
+                                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                            />
+                                            <Legend verticalAlign="middle" align="right" layout="vertical" />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+
+                            {/* Pool Analytics */}
+                            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
+                                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-6">Funding Pools Utilization</h3>
+                                <div className="h-[200px] w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={chartData.poolAnalytics} layout="vertical">
+                                            <XAxis type="number" hide />
+                                            <YAxis dataKey="name" type="category" width={100} fontSize={10} tickLine={false} axisLine={false} />
+                                            <Tooltip 
+                                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                                formatter={(v: any) => [`₱${Number(v).toLocaleString()}`, 'Balance']}
+                                            />
+                                            <Legend fontSize={10} />
+                                            <Bar name="Available" dataKey="available" stackId="a" fill="#10B981" radius={[0, 0, 0, 0]} />
+                                            <Bar name="Allocated" dataKey="allocated" stackId="a" fill="#EF4444" radius={[0, 4, 4, 0]} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Main Tabs Navigation */}
                 <div className="mt-8 border-b border-gray-200">

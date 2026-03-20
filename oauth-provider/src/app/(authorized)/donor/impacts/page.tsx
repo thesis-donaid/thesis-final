@@ -29,6 +29,7 @@ import {
     ClipboardList,
     ShieldCheck,
     Link2,
+    Download
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -131,6 +132,31 @@ export default function DonorImpactsPage() {
         }
         fetchImpacts();
     }, [authStatus]);
+
+    const [downloading, setDownloading] = useState<number | null>(null);
+
+    const handleDownloadReceipt = async (requestId: number, purpose: string) => {
+        try {
+            setDownloading(requestId);
+            const res = await fetch(`/api/donor/receipt/${requestId}`);
+            if (!res.ok) throw new Error("Failed to generate receipt");
+            
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `Donation_Receipt_${purpose.replace(/\s+/g, '_')}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch (err) {
+            console.error(err);
+            alert("Could not download receipt. Please try again later.");
+        } finally {
+            setDownloading(null);
+        }
+    };
 
     const fetchImpacts = async () => {
         try {
@@ -257,6 +283,18 @@ export default function DonorImpactsPage() {
                                 <div className="text-right shrink-0">
                                     <p className="text-2xl font-bold text-gray-900">₱{selectedItem.requestAmount.toLocaleString()}</p>
                                     <p className="text-xs text-gray-400 mt-1">Total request</p>
+                                    <button 
+                                        onClick={() => handleDownloadReceipt(selectedItem.requestId, selectedItem.purpose)}
+                                        disabled={downloading === selectedItem.requestId}
+                                        className="mt-4 flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm hover:shadow-md disabled:opacity-50"
+                                    >
+                                        {downloading === selectedItem.requestId ? (
+                                            <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                        ) : (
+                                            <Download className="w-3.5 h-3.5" />
+                                        )}
+                                        Download Receipt
+                                    </button>
                                 </div>
                             </div>
                         </div>

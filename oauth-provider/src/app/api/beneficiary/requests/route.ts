@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma, RequestStatus, UrgencyLevel } from "../../../../../generated/prisma/client";
 import { getSession } from "@/lib/session";
+import { pusherServer } from "@/lib/pusher";
 
 function calculateUrgency(dateNeeded: Date): "LOW" | "MEDIUM" | "HIGH" {
     const today = new Date();
@@ -48,6 +49,13 @@ export async function POST(req: NextRequest) {
             );
         }
 
+        if(amount < 50) {
+            return NextResponse.json(
+                { error: "Request amount is minimum of 50 PHP" },
+                { status: 400 }
+            )
+        }
+
         const dateNeeded = new Date(date_needed);
         const urgencyLevel = calculateUrgency(dateNeeded);
 
@@ -61,7 +69,23 @@ export async function POST(req: NextRequest) {
                 additional_notes,
                 urgency_level: urgencyLevel,
             },
+            include: {
+                beneficiary: true,
+            }
         });
+
+        // Trigger Pusher for Admin
+        try {
+            await pusherServer.trigger("admin-events", "new-request", {
+                requestId: request.id,
+                beneficiaryName: `${request.beneficiary.firstName} ${request.beneficiary.lastName}`,
+                purpose: request.purpose,
+                amount: request.amount,
+                urgency: request.urgency_level,
+            });
+        } catch (pusherError) {
+            console.error("Pusher admin trigger failed:", pusherError);
+        }
 
         return NextResponse.json(request, { status: 201 });
     } catch(error) {

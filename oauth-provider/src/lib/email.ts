@@ -21,9 +21,12 @@ function wrapEmailHtml(bodyHtml: string): string {
             <div style="padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
                 ${bodyHtml}
             </div>
-            <div style="text-align: center; padding: 16px; color: #9ca3af; font-size: 11px;">
+            <div style="text-align: center; padding: 24px; color: #9ca3af; font-size: 11px;">
                 <p style="margin: 0;">&copy; ${new Date().getFullYear()} ${ORG_NAME}. All rights reserved.</p>
                 <p style="margin: 4px 0 0;">This is an automated message. Please do not reply.</p>
+                <div style="margin-top: 16px; border-top: 1px solid #f3f4f6; padding-top: 16px;">
+                    <p style="margin: 0; font-weight: 600; color: #6b7280; letter-spacing: 0.5px; text-transform: uppercase;">Powered By DonAid</p>
+                </div>
             </div>
         </div>
     `;

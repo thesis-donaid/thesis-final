@@ -20,7 +20,6 @@ import {
     Check,
     Smartphone,
     QrCode,
-    Globe,
     CreditCard,
     Eye,
     EyeOff,
@@ -82,16 +81,16 @@ const PAYMENT_METHODS = [
         fee: "1%-1.5% transaction fee",
         fees: 0.015
     },
-    { 
-        id: "card", 
-        name: "Credit Card", 
-        icon: Globe,
-        color: "bg-indigo-500",
-        description: "Pay with Card",
-        fee: "3%-3.5% + ₱13-₱15 transaction fee",
-        fees: 0.035,
-        extraFee: 15,
-    },
+    // { 
+    //     id: "card", 
+    //     name: "Credit Card", 
+    //     icon: Globe,
+    //     color: "bg-indigo-500",
+    //     description: "Pay with Card",
+    //     fee: "3%-3.5% + ₱13-₱15 transaction fee",
+    //     fees: 0.035,
+    //     extraFee: 15,
+    // },
 ];
 
 export default function DonationPage() {
@@ -552,33 +551,33 @@ export default function DonationPage() {
                                     <p className="text-gray-500 text-sm">Select your preferred payment method to complete the donation.</p>
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     {PAYMENT_METHODS.map((method) => (
-                                        <div
+                                        <button
                                             key={method.id}
+                                            type="button"
                                             onClick={() => setFormData(prev => ({ ...prev, payment_method: method.id }))}
-                                            className={`relative cursor-pointer rounded-2xl border-2 p-5 transition-all duration-200 hover:shadow-md ${
+                                            aria-pressed={formData.payment_method === method.id}
+                                            className={`relative group focus:outline-none cursor-pointer rounded-2xl border-2 p-6 transition-all duration-200 shadow-sm hover:shadow-lg ${
                                                 formData.payment_method === method.id
-                                                    ? "border-red-500 bg-red-50/50 shadow-md shadow-red-100"
+                                                    ? "border-red-600 bg-red-50/80 shadow-md shadow-red-100 scale-105"
                                                     : "border-gray-200 bg-white hover:border-red-200"
                                             }`}
                                         >
                                             {formData.payment_method === method.id && (
-                                                <div className="absolute top-3 right-3 w-6 h-6 bg-red-600 rounded-full flex items-center justify-center">
-                                                    <Check className="w-4 h-4 text-white" />
+                                                <div className="absolute top-4 right-4 w-7 h-7 bg-red-600 rounded-full flex items-center justify-center shadow-lg">
+                                                    <Check className="w-5 h-5 text-white" />
                                                 </div>
                                             )}
-                                            <div className="flex items-center space-x-4">
-                                                <div className={`w-12 h-12 ${method.color} rounded-xl flex items-center justify-center flex-shrink-0`}>
-                                                    <method.icon className="w-6 h-6 text-white" />
+                                            <div className="flex flex-col items-center justify-center space-y-3">
+                                                <div className={`w-14 h-14 ${method.color} rounded-xl flex items-center justify-center shadow-md`}>
+                                                    <method.icon className="w-7 h-7 text-white" />
                                                 </div>
-                                                <div>
-                                                    <h3 className="font-bold text-gray-900">{method.name}</h3>
-                                                    <p className="text-xs text-gray-500">{method.description}</p>
-                                                    <p className="text-xs text-red-500">{method.fee}</p>
-                                                </div>
+                                                <h3 className="font-bold text-lg text-gray-900 group-hover:text-red-600 transition-colors">{method.name}</h3>
+                                                <p className="text-xs text-gray-500 text-center">{method.description}</p>
+                                                <p className="text-xs text-red-500 font-semibold">{method.fee}</p>
                                             </div>
-                                        </div>
+                                        </button>
                                     ))}
                                 </div>
                             </motion.div>
@@ -641,13 +640,12 @@ export default function DonationPage() {
                                                 - ({(() => {
                                                     const method = PAYMENT_METHODS.find(m => m.id === formData.payment_method);
                                                     const feePercent = ((method?.fees || 0) * 100).toFixed(1);
-                                                    return `${feePercent}%${method?.id === "card" ? ` + ₱${method.extraFee}` : ""}`;
+                                                    return `${feePercent}%`;
                                                 })()}) &nbsp;
                                                 ₱{(() => {
                                                     const method = PAYMENT_METHODS.find(m => m.id === formData.payment_method);
                                                     const feeAmount = (method?.fees || 0) * formData.amount;
-                                                    const extraFee = method?.id === "card" ? method.extraFee || 0 : 0;
-                                                    return (feeAmount + extraFee).toFixed(2);
+                                                    return (feeAmount).toFixed(2);
                                                 })()}
                                                 
                                             </span>
@@ -677,8 +675,7 @@ export default function DonationPage() {
                                                 ₱{(() => {
                                                     const method = PAYMENT_METHODS.find(m => m.id === formData.payment_method);
                                                     const feeAmount = (method?.fees || 0) * formData.amount;
-                                                    const extraFee = method?.id === "card" ? method.extraFee || 0 : 0;
-                                                    const total = formData.amount - feeAmount - extraFee;
+                                                    const total = formData.amount - feeAmount;
                                                     return total.toLocaleString();
                                                 })()}
                                             </span>

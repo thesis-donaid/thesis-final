@@ -64,22 +64,6 @@ export async function POST(req: NextRequest) {
             },
         });
 
-        // If there's a starting amount for unrestricted pool, update UnrestrictedFund
-        if (isUnrestricted && startingAmount > 0) {
-            await prisma.unrestrictedFund.upsert({
-                where: { id: 1 },
-                update: {
-                    total_received: { increment: startingAmount },
-                    available_balance: { increment: startingAmount },
-                },
-                create: {
-                    total_received: startingAmount,
-                    total_allocated: 0,
-                    available_balance: startingAmount,
-                },
-            });
-        }
-
         return NextResponse.json(
             {
                 success: true,

@@ -1,5 +1,6 @@
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { pusherServer } from "@/lib/pusher";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma, RequestStatus } from "../../../../../../generated/prisma/client";
 import { del } from "@vercel/blob";
@@ -79,7 +80,24 @@ export async function PATCH(
         const request = await prisma.beneficiaryRequest.update({
             where: { id: parseInt(id) },
             data: updateData,
+            include: { beneficiary: true },
         });
+
+        // Real-time notification via Pusher
+        try {
+            await pusherServer.trigger(
+                `beneficiary-${request.beneficiary.userId}`,
+                "request-updated",
+                {
+                    requestId: request.id,
+                    status: request.status,
+                    purpose: request.purpose,
+                    amount: request.amount,
+                }
+            );
+        } catch (pusherError) {
+            console.error("Pusher trigger failed:", pusherError);
+        }
 
         return NextResponse.json(request);
     } catch(error) {
@@ -126,7 +144,7 @@ export async function DELETE(
             return NextResponse.json({ error: "Unauthorized" }, { status: 401})
         }
 
-        if(request.status !== "PENDING") {
+        if(request.status !== "PENDING" && request.status !== "REJECTED") {
             return NextResponse.json(
                 { error: "Can only cancel pending requests" },
                 { status: 400 }

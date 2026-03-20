@@ -151,7 +151,7 @@ export default function RequestForm({ beneficiaryId, onSuccess }: RequestFormPro
                             value={formData.amount}
                             onChange={handleChange}
                             required
-                            min="1"
+                            min="50"
                             step="0.01"
                             className="w-full pl-8 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all outline-none text-gray-900"
                             placeholder="0.00"

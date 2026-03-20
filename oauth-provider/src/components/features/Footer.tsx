@@ -226,9 +226,15 @@ export default function Footer() {
       {/* Bottom bar */}
       <div className="border-t border-gray-800">
         <div className="max-w-7xl mx-auto px-4 md:px-10 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-gray-600 text-xs text-center sm:text-left">
-            © 2025 Puso ng Ama Foundation Inc. All rights reserved.
-          </p>
+          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6">
+            <p className="text-gray-600 text-xs text-center sm:text-left">
+              © {new Date().getFullYear()} Puso ng Ama Foundation Inc. All rights reserved.
+            </p>
+            <div className="h-3 w-px bg-gray-800 hidden sm:block" />
+            <p className="text-gray-500 text-[10px] font-bold tracking-widest uppercase">
+              Powered By DonAid
+            </p>
+          </div>
           <p className="text-gray-700 text-xs flex items-center gap-1.5">
             Made with <Heart className="w-3 h-3 text-red-700 fill-red-700" /> for the community
           </p>

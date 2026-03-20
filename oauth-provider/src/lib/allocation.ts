@@ -19,8 +19,22 @@ interface DonationWhereClause {
 
 
 export async function getAvailableFunds(): Promise<AvailableFunds> {
-    // Get unrestricted fund balance
-    const unrestricted = await prisma.unrestrictedFund.findFirst();
+    // Compute unrestricted fund balance dynamically from actual donation records
+    // This avoids relying on the UnrestrictedFund summary table which can get out of sync
+    const unrestrictedAgg = await prisma.donation.aggregate({
+        where: {
+            donation_type: "unrestricted",
+            status: "completed",
+            remaining_amount: { gt: 0 },
+        },
+        _sum: {
+            remaining_amount: true,
+            net_amount: true,
+        },
+    });
+
+    const unrestrictedAvailable = unrestrictedAgg._sum.remaining_amount ?? 0;
+    const unrestrictedTotal = unrestrictedAgg._sum.net_amount ?? 0;
 
     // Get all active pools with available balance
     const pools = await prisma.pool.findMany({
@@ -39,8 +53,8 @@ export async function getAvailableFunds(): Promise<AvailableFunds> {
 
     return {
         unrestricted: {
-            available: unrestricted?.available_balance ?? 0,
-            total: unrestricted?.total_received ?? 0,
+            available: unrestrictedAvailable,
+            total: unrestrictedTotal,
         },
         restricted: pools.map(pool => ({
             poolId: pool.id,
@@ -258,15 +272,8 @@ export async function createAllocation(
                 item.amount
             );
 
-            // 3. Update fund balances
-            if (item.sourceType === "UNRESTRICTED") {
-                await tx.unrestrictedFund.updateMany({
-                    data: {
-                        total_allocated: {increment: item.amount },
-                        available_balance: { decrement: item.amount },
-                    }
-                });
-            } else if (item.poolId) {
+            // 3. Update fund balances for restricted pools
+            if (item.sourceType === "RESTRICTED" && item.poolId) {
                 await tx.pool.update({
                     where: { id: item.poolId },
                     data: {

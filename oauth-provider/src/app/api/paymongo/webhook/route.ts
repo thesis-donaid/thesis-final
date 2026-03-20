@@ -6,6 +6,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { sendDonationConfirmation } from "@/lib/email";
+import { pusherServer } from "@/lib/pusher";
 import { NextRequest, NextResponse } from "next/server";
 
 // GET endpoint to test if webhook route is accessible
@@ -162,6 +163,17 @@ export async function POST(req: NextRequest) {
             available_amount: { increment: donation.net_amount || 0 },
           },
         });
+      }
+
+      // Trigger Pusher for Admin
+      try {
+        await pusherServer.trigger("admin-events", "donation-received", {
+          amount: donation.amount,
+          donorName: donation.guestDonor?.email || donation.registeredDonor?.user?.name || "Anonymous",
+          type: donation.donation_type,
+        });
+      } catch (pusherError) {
+        console.error("Pusher admin trigger failed:", pusherError);
       }
 
       // TODO: Save to blockchain here
