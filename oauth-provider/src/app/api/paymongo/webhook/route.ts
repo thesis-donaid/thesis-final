@@ -194,6 +194,31 @@ export async function POST(req: NextRequest) {
           await pusherServer.trigger(`user-${admin.id}`, 'notification', adminNotification);
         }
 
+        // Trigger public Pusher for Live Donations
+        try {
+          let publicDonorName = "Anonymous Donor";
+          if (!donation.is_anonymous) {
+              if (donation.registeredDonor?.user?.name) {
+                  publicDonorName = donation.registeredDonor.user.name;
+              } else if (donation.guestDonor?.email) {
+                  const [localPart] = donation.guestDonor.email.split("@");
+                  publicDonorName = localPart.charAt(0).toUpperCase() + localPart.slice(1);
+              }
+          }
+
+          await pusherServer.trigger('public-donations', 'new-donation', {
+            id: donation.id.toString(),
+            donorName: publicDonorName,
+            amount: donation.amount,
+            currency: donation.currency || 'PHP',
+            message: donation.message || null,
+            paidAt: donation.paid_at?.toISOString() || new Date().toISOString(),
+            isAnonymous: donation.is_anonymous || false
+          });
+        } catch (pubErr) {
+          console.error("Public notification failed:", pubErr);
+        }
+
         // 2. Notify Registered Donor
         if (donation.registeredDonor?.userId) {
           const donorNotification = {

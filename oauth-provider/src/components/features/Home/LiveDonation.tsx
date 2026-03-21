@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Heart, Clock, Users, ChevronRight } from "lucide-react";
+import PusherClient from "pusher-js";
 
 interface Donation {
   id: string;
@@ -18,24 +19,49 @@ export default function RecentDonations() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchDonations = async () => {
-      try {
-        const response = await fetch('/api/donation/recent');
-        if (!response.ok) {
-          throw new Error('Failed to fetch donations');
-        }
-        const data = await response.json();
-        setDonations(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong');
-      } finally {
-        setLoading(false);
+  const fetchDashboardData = useCallback(async (silent = false) => {
+    try {
+      if (!silent) setLoading(true);
+      const response = await fetch('/api/donation/recent');
+      if (!response.ok) {
+        throw new Error('Failed to fetch donations');
       }
-    };
 
-    fetchDonations();
+      const data = await response.json();
+      setDonations(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
+
+    // Initialize Pusher Client
+    const pusher = new PusherClient(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
+      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+    });
+
+    const channel = pusher.subscribe("public-donations");
+    
+    channel.bind("new-donation", (newDonation: Donation) => {
+      setDonations((prev) => {
+        // Prevent duplicate entries
+        if (prev.some(d => d.id === newDonation.id)) return prev;
+        
+        // Add new donation and keep latest
+        const updated = [newDonation, ...prev];
+        return updated.slice(0, 6); 
+      });
+    });
+
+    return () => {
+      pusher.unsubscribe("public-donations");
+      pusher.disconnect();
+    };
+  }, [fetchDashboardData]);
 
   const formatAmount = (amount: number, currency: string) => {
     return new Intl.NumberFormat('en-US', {

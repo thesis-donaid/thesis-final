@@ -22,6 +22,7 @@ import {
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { statusConfig } from '@/lib/status';
+import { pusherClient } from '@/lib/pusher-client';
 
 interface Donation {
     id: number;
@@ -84,12 +85,24 @@ export default function DonorDashboard() {
     const [expandedRequest, setExpandedRequest] = useState<number | null>(null);
 
     useEffect(() => {
-        if (authStatus !== 'authenticated') {
+        if (authStatus !== 'authenticated' || !session?.user?.id) {
             if (authStatus !== 'loading') setLoading(false);
             return;
         }
         fetchDonations();
-    }, [authStatus]);
+
+        const channelName = `user-${session.user.id}`;
+        const channel = pusherClient.subscribe(channelName);
+
+        channel.bind("notification", () => {
+            fetchDonations();
+        });
+
+        return () => {
+            channel.unbind_all();
+            pusherClient.unsubscribe(channelName);
+        };
+    }, [authStatus, session?.user?.id]);
 
     const fetchDonations = async () => {
         try {

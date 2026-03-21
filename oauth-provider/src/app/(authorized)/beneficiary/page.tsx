@@ -91,12 +91,15 @@ export default function BeneficiaryDashboard() {
         fetchRequests();
 
         // Pusher Real-time Listener
-        const channel = pusherClient.subscribe(`beneficiary-${session.user.id}`);
+        const channelName = `user-${session.user.id}`;
+        const channel = pusherClient.subscribe(channelName);
 
-        channel.bind("request-updated", (data: { requestId: number; status: string; purpose: string }) => {
+        channel.bind("notification", (data: any) => {
             // Show notification
-            setNotification(`Request "${data.purpose}" has been updated to ${data.status}`);
-            setTimeout(() => setNotification(null), 5000);
+            if (data.title && data.message) {
+                setNotification(`${data.title}: ${data.message}`);
+                setTimeout(() => setNotification(null), 5000);
+            }
             
             // Silent refresh
             fetchRequests(true);
@@ -104,7 +107,7 @@ export default function BeneficiaryDashboard() {
 
         return () => {
             channel.unbind_all();
-            pusherClient.unsubscribe(`beneficiary-${session.user.id}`);
+            pusherClient.unsubscribe(channelName);
         };
     }, [authStatus, session?.user?.id, fetchRequests]);
 

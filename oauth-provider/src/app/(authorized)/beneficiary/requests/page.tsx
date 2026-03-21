@@ -79,12 +79,15 @@ export default function BeneficiaryRequestsPage() {
     useEffect(() => {
         if (status !== "authenticated" || !session?.user?.id) return;
 
-        const channel = pusherClient.subscribe(`beneficiary-${session.user.id}`);
+        const channelName = `user-${session.user.id}`;
+        const channel = pusherClient.subscribe(channelName);
 
-        channel.bind("request-updated", (data: { requestId: number; status: string; purpose: string }) => {
+        channel.bind("notification", (data: any) => {
             // Show notification
-            setNotification(`Request "${data.purpose}" has been updated to ${data.status}`);
-            setTimeout(() => setNotification(null), 5000);
+            if (data.title && data.message) {
+                setNotification(`${data.title}: ${data.message}`);
+                setTimeout(() => setNotification(null), 5000);
+            }
 
             // Auto-refresh the list
             fetchRequests(true);
@@ -92,7 +95,7 @@ export default function BeneficiaryRequestsPage() {
 
         return () => {
             channel.unbind_all();
-            pusherClient.unsubscribe(`beneficiary-${session.user.id}`);
+            pusherClient.unsubscribe(channelName);
         };
     }, [status, session?.user?.id, fetchRequests]);
 

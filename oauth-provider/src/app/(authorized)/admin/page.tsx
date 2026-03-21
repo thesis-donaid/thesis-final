@@ -222,26 +222,26 @@ export default function AdminDashboard() {
 
         fetchDashboardData();
 
+        if (!session?.user?.id) return;
+
         // Pusher Real-time Listener for Admin
-        const channel = pusherClient.subscribe('admin-events');
+        const channelName = `user-${session.user.id}`;
+        const channel = pusherClient.subscribe(channelName);
 
-        channel.bind('new-request', (data: { beneficiaryName: string; purpose: string }) => {
-            // Show notification toast
-            setNotification(`New request from ${data.beneficiaryName}: "${data.purpose}"`);
-            setTimeout(() => setNotification(null), 8000);
+        channel.bind('notification', (data: any) => {
+            // Show notification toast if data contains message
+            if (data.title && data.message) {
+                setNotification(`${data.title}: ${data.message}`);
+                setTimeout(() => setNotification(null), 8000);
+            }
 
-            // Silent refresh of all data
-            fetchDashboardData(true);
-        });
-
-        // Also listen for donations (optional but good for future)
-        channel.bind('donation-received', () => {
+            // Silent refresh of all data whenever any notification happens (new request, donation, etc)
             fetchDashboardData(true);
         });
 
         return () => {
             channel.unbind_all();
-            pusherClient.unsubscribe('admin-events');
+            pusherClient.unsubscribe(channelName);
         };
     }, [authStatus, session, fetchDashboardData]);
 

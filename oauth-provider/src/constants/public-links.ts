@@ -27,7 +27,7 @@ const ADMIN_LINKS = [
   { href: '/admin/pools',  label: 'Pool' },
   { href: '/admin/users', label: 'Users' },
   { href: '/admin/reports', label: "Reports" },
-
+  { href: '/admin/ledger', label: 'Ledger' }
 ]
 
 const REGISTERD_LINKS = [

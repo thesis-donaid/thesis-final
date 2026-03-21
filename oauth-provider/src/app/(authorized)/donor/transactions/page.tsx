@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { pusherClient } from '@/lib/pusher-client';
 
 interface DonationAllocationBlockchain {
     blockchain_tx_hash: string | null;
@@ -60,7 +61,7 @@ type SortDir = 'asc' | 'desc';
 const ITEMS_PER_PAGE = 10;
 
 export default function TransactionHistoryPage() {
-    const { status: authStatus } = useSession();
+    const { data: session, status: authStatus } = useSession();
     const [donations, setDonations] = useState<Donation[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -84,12 +85,24 @@ export default function TransactionHistoryPage() {
     const [selectedDonation, setSelectedDonation] = useState<Donation | null>(null);
 
     useEffect(() => {
-        if (authStatus !== 'authenticated') {
+        if (authStatus !== 'authenticated' || !session?.user?.id) {
             if (authStatus !== 'loading') setLoading(false);
             return;
         }
         fetchDonations();
-    }, [authStatus]);
+
+        const channelName = `user-${session.user.id}`;
+        const channel = pusherClient.subscribe(channelName);
+
+        channel.bind("notification", () => {
+            fetchDonations();
+        });
+
+        return () => {
+            channel.unbind_all();
+            pusherClient.unsubscribe(channelName);
+        };
+    }, [authStatus, session?.user?.id]);
 
     const fetchDonations = async () => {
         try {

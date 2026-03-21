@@ -419,16 +419,21 @@ export default function Hero() {
               animate={{ opacity: [0.3, 0.6, 0.3] }}
               transition={{ duration: 2, repeat: Infinity }}
             />
-            <span className="relative flex items-center gap-2 group-hover:text-red-600 transition-colors duration-300">
-              Learn Our Story
-              <motion.span 
-                className="group-hover:translate-x-1 transition-transform"
-                animate={{ x: [0, 3, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <Play className="w-5 sm:w-6 h-5 sm:h-6" />
-              </motion.span>
-            </span>
+
+            <Link href='https://www.youtube.com/@pusongama5205' target='_blank'>
+            
+              <span className="relative flex justify-center items-center gap-2 group-hover:text-red-600 transition-colors duration-300">
+                Learn Our Story
+                <motion.span 
+                  className="group-hover:translate-x-1 transition-transform"
+                  animate={{ x: [0, 3, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <Play className="w-5 sm:w-6 h-5 sm:h-6" />
+                </motion.span>
+              </span>
+            
+            </Link>
           </motion.button>
         </motion.div>
 

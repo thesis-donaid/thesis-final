@@ -7,6 +7,7 @@ import { ShieldCheck, Search, ExternalLink, FileText, Globe, Clock, Loader2, Spa
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { pusherClient } from '@/lib/pusher-client';
 
 interface LedgerEntry {
     id: number;
@@ -41,6 +42,20 @@ export default function DonorLedgerPage() {
 
         if (authStatus === 'authenticated') {
             fetchLedger();
+
+            if (session?.user?.id) {
+                const channelName = `user-${session.user.id}`;
+                const channel = pusherClient.subscribe(channelName);
+
+                channel.bind("notification", () => {
+                    fetchLedger();
+                });
+
+                return () => {
+                    channel.unbind_all();
+                    pusherClient.unsubscribe(channelName);
+                };
+            }
         }
     }, [authStatus, router, session]);
 

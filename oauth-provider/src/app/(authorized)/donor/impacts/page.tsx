@@ -32,6 +32,7 @@ import {
     Download
 } from 'lucide-react';
 import Link from 'next/link';
+import { pusherClient } from '@/lib/pusher-client';
 
 interface ImpactFile {
     id: number;
@@ -105,7 +106,7 @@ function getExplorerTxUrl(txHash: string, network: string): string {
 }
 
 export default function DonorImpactsPage() {
-    const { status: authStatus } = useSession();
+    const { data: session, status: authStatus } = useSession();
     const [impactItems, setImpactItems] = useState<ImpactItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -126,12 +127,24 @@ export default function DonorImpactsPage() {
     const [selectedItem, setSelectedItem] = useState<ImpactItem | null>(null);
 
     useEffect(() => {
-        if (authStatus !== 'authenticated') {
+        if (authStatus !== 'authenticated' || !session?.user?.id) {
             if (authStatus !== 'loading') setLoading(false);
             return;
         }
         fetchImpacts();
-    }, [authStatus]);
+
+        const channelName = `user-${session.user.id}`;
+        const channel = pusherClient.subscribe(channelName);
+
+        channel.bind("notification", () => {
+            fetchImpacts();
+        });
+
+        return () => {
+            channel.unbind_all();
+            pusherClient.unsubscribe(channelName);
+        };
+    }, [authStatus, session?.user?.id]);
 
     const [downloading, setDownloading] = useState<number | null>(null);
 
