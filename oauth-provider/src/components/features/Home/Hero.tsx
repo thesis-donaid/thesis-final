@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useTransform, useSpring, useScroll } from 'motion/react'
 import { Heart, ArrowDown, ChevronLeft, ChevronRight, Play } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
 
 export default function Hero() {
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -387,15 +388,19 @@ export default function Hero() {
               whileHover={{ opacity: 0.1 }}
               transition={{ duration: 0.4 }}
             />
-            <span className="relative flex items-center justify-center gap-2">
-              Make a Donation
-              <motion.span
-                animate={{ rotate: [0, 12, -12, 0], scale: [1, 1.2, 1] }}
-                transition={{ duration: 0.8, repeat: Infinity, repeatDelay: 3 }}
-              >
-                <Heart className="w-5 sm:w-6 h-5 sm:h-6" fill="currentColor" />
-              </motion.span>
-            </span>
+            <Link href={`/donation`}>
+              <span className="relative flex items-center justify-center gap-2">
+                Make a Donation
+                <motion.span
+                  animate={{ rotate: [0, 12, -12, 0], scale: [1, 1.2, 1] }}
+                  transition={{ duration: 0.8, repeat: Infinity, repeatDelay: 3 }}
+                >
+                  <Heart className="w-5 sm:w-6 h-5 sm:h-6" fill="currentColor" />
+                </motion.span>
+              </span>
+            
+            
+            </Link>
           </motion.button>
           
           <motion.button 

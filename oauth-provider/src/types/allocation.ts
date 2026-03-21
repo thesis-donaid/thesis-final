@@ -32,7 +32,7 @@ export interface AllocationResponse {
         };
         notifications: {
             donorCount: number;
-            beneficiarNotified: boolean;
+            beneficiaryNotified: boolean;
         };
     };
     error?: string;

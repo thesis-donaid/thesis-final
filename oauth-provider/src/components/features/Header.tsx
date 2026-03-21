@@ -191,7 +191,7 @@ export default function Header(){
                 </div>
 
                 {/* Desktop Menu - Perfectly Centered */}
-                <div className='hidden lg:flex items-center justify-center space-x-1 px-4'>
+                <div className='hidden md:flex items-center justify-center space-x-1 px-4'>
                     {links.map((link,index) => (
                         <div key={link.href}
                             className='relative group flex-shrink-0'

@@ -2,13 +2,14 @@ import { createAllocation, getAvailableFunds, getDonorsToNotify, markDonorsNotif
 import { authOptions } from "@/lib/auth";
 import { sendAllocationNotificationEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
+import { pusherServer } from "@/lib/pusher";
 import { AllocationResponse, CreateAllocationRequest } from "@/types/allocation";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 
 
-// GET - Ffetch available funds for allocation
+// GET - Fetch available funds for allocation
 export async function GET(req: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
@@ -77,7 +78,35 @@ export async function POST(req: NextRequest) {
 
         // Send notification
         let donorCount = 0;
-        let beneficiarNotified = false;
+        let beneficiaryNotified = false;
+
+        try {
+            const notificationData = {
+                title: "Request Approved",
+                message: `Your request for ${request?.purpose} has been APPROVED.`,
+                type: "request_status",
+                link: `/beneficiary/requests`
+            }
+
+            if (request?.beneficiary?.userId) {
+                // 1. Save to database
+                await prisma.userNotification.create({
+                    data: {
+                        userId: request.beneficiary.userId,
+                        ...notificationData
+                    }
+                });
+
+                // 2. Trigger Pusher
+                await pusherServer.trigger(
+                    `user-${request.beneficiary.userId}`,
+                    "notification",
+                    notificationData
+                );
+            }
+        } catch (notificationError) {
+            console.error("Persistent notification failed:", notificationError);
+        }
 
         if (body.notifyDonors) {
             const allocationIds = allocations.map(a => a.id);
@@ -212,9 +241,9 @@ export async function POST(req: NextRequest) {
                     disbursementDate: new Date(body.disbursementDate),
                     isBeneficiary: true
                 });
-                beneficiarNotified = true;
+                beneficiaryNotified = true;
             } catch (emailError) {
-                console.error("Failed to notify beneficiary:", emailError);
+                console.error("Failed to notify beneficiary email:", emailError);
             }
         }
 
@@ -240,7 +269,7 @@ export async function POST(req: NextRequest) {
                 },
                 notifications: {
                     donorCount,
-                    beneficiarNotified
+                    beneficiaryNotified
                 }
             }
         };
