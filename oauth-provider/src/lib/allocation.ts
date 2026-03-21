@@ -307,6 +307,9 @@ export async function createAllocation(
             }
         });
         return allocations;
+    }, {
+        maxWait: 5000,
+        timeout: 30000,
     });
 }
 
@@ -347,6 +350,7 @@ export async function getDonorsToNotify(allocationIds: number[]) {
         requestPurpose: da.allocation.request.purpose,
         disbursementDate: da.allocation.disbursement_date,
         isAnonymous: da.donation.is_anonymous,
+        userId: da.donation.registeredDonor?.userId,
     }));
 }
 

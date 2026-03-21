@@ -129,6 +129,32 @@ export async function POST(req: NextRequest) {
                         console.error(`Failed to send email to ${donor.email}`)
                     }
                 }
+                
+                if (donor.userId) {
+                    try {
+                        const notificationData = {
+                            title: "Donation Allocated",
+                            message: `₱${donor.amountUsed.toLocaleString()} of your donation was allocated for ${donor.requestPurpose}.`,
+                            type: "allocation",
+                            link: "/donor/impacts"
+                        };
+                        
+                        await prisma.userNotification.create({
+                            data: {
+                                userId: donor.userId,
+                                ...notificationData
+                            }
+                        });
+
+                        await pusherServer.trigger(
+                            `user-${donor.userId}`,
+                            "notification",
+                            notificationData
+                        );
+                    } catch (notificationError) {
+                        console.error("Failed to notify donor via Pusher:", notificationError);
+                    }
+                }
             }
 
             // mark as notified
@@ -174,6 +200,32 @@ export async function POST(req: NextRequest) {
                             } catch (emailError) {
                                 console.error(`Failed to send allocation email to donor ${donation.email}:`, emailError);
                             }
+
+                            if (donation.registeredDonor?.userId) {
+                                try {
+                                    const notificationData = {
+                                        title: "Donation Allocated",
+                                        message: `Your pool donation was allocated for ${request?.purpose ?? "Community Support"}.`,
+                                        type: "allocation",
+                                        link: "/donor/impacts"
+                                    };
+                                    
+                                    await prisma.userNotification.create({
+                                        data: {
+                                            userId: donation.registeredDonor.userId,
+                                            ...notificationData
+                                        }
+                                    });
+
+                                    await pusherServer.trigger(
+                                        `user-${donation.registeredDonor.userId}`,
+                                        "notification",
+                                        notificationData
+                                    );
+                                } catch (notificationError) {
+                                    console.error("Failed to notify donor via Pusher:", notificationError);
+                                }
+                            }
                         }
                     }
                 }
@@ -211,6 +263,32 @@ export async function POST(req: NextRequest) {
                                 donorCount++;
                             } catch (emailError) {
                                 console.error(`Failed to send allocation email to donor ${donation.email}:`, emailError);
+                            }
+
+                            if (donation.registeredDonor?.userId) {
+                                try {
+                                    const notificationData = {
+                                        title: "Donation Allocated",
+                                        message: `Your donation was allocated for ${request?.purpose ?? "Community Support"}.`,
+                                        type: "allocation",
+                                        link: "/donor/impacts"
+                                    };
+                                    
+                                    await prisma.userNotification.create({
+                                        data: {
+                                            userId: donation.registeredDonor.userId,
+                                            ...notificationData
+                                        }
+                                    });
+
+                                    await pusherServer.trigger(
+                                        `user-${donation.registeredDonor.userId}`,
+                                        "notification",
+                                        notificationData
+                                    );
+                                } catch (notificationError) {
+                                    console.error("Failed to notify donor via Pusher:", notificationError);
+                                }
                             }
                         }
                     }

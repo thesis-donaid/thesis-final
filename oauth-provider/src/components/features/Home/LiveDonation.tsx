@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Heart, Clock, Users, ChevronRight } from "lucide-react";
-import PusherClient from "pusher-js";
+import { pusherClient } from "@/lib/pusher-client";
 
 interface Donation {
   id: string;
@@ -39,17 +39,12 @@ export default function RecentDonations() {
   useEffect(() => {
     fetchDashboardData();
 
-    // Initialize Pusher Client
-    const pusher = new PusherClient(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
-      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
-    });
-
-    const channel = pusher.subscribe("public-donations");
+    const channel = pusherClient.subscribe("public-donations");
     
     channel.bind("new-donation", (newDonation: Donation) => {
       setDonations((prev) => {
         // Prevent duplicate entries
-        if (prev.some(d => d.id === newDonation.id)) return prev;
+        if (prev.some(d => String(d.id) === String(newDonation.id))) return prev;
         
         // Add new donation and keep latest
         const updated = [newDonation, ...prev];
@@ -58,8 +53,8 @@ export default function RecentDonations() {
     });
 
     return () => {
-      pusher.unsubscribe("public-donations");
-      pusher.disconnect();
+      channel.unbind("new-donation");
+      pusherClient.unsubscribe("public-donations");
     };
   }, [fetchDashboardData]);
 
