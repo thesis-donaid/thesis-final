@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { sendDisbursementNotificationEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import { pusherServer } from "@/lib/pusher";
-import { recordProofOnChain } from "@/blockchain/service";
+import { recordProofOnChain, hasProofOnChain } from "@/blockchain/service";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -400,6 +400,7 @@ export async function PUT(
                             donationAllocations: {
                                 include: { donation: true },
                             },
+                            blockchainLedgers: true,
                         },
                     },
                 },
@@ -414,6 +415,19 @@ export async function PUT(
 
                 // Record one blockchain proof per allocation
                 for (const allocation of fullRequest.allocations) {
+                    // 1. Check if already has a record in our database
+                    if (allocation.blockchainLedgers && allocation.blockchainLedgers.length > 0) {
+                        console.log(`[Blockchain] Proof already recorded in DB for allocation ${allocation.id}. Skipping.`);
+                        continue;
+                    }
+
+                    // 2. Secondary check on the blockchain directly (safety in case of DB sync issues)
+                    const onChainExists = await hasProofOnChain(String(allocation.id));
+                    if (onChainExists) {
+                        console.log(`[Blockchain] Proof already recorded on-chain for allocation ${allocation.id}. Skipping DB-only update.`);
+                        continue;
+                    }
+
                     // Collect all donation IDs and donor IDs for this allocation
                     const donationIds: string[] = [];
                     const registeredDonorIds: number[] = [];

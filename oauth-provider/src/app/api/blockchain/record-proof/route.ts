@@ -22,7 +22,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { recordProofOnChain } from "@/blockchain/service";
+import { recordProofOnChain, hasProofOnChain } from "@/blockchain/service";
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,6 +37,15 @@ export async function POST(request: NextRequest) {
     if (!donationIds?.length || !allocationId || !beneficiaryId || !amount || !purpose) {
       return NextResponse.json(
         { success: false, error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    // Check if already has a record on-chain
+    const onChainExists = await hasProofOnChain(String(allocationId));
+    if (onChainExists) {
+      return NextResponse.json(
+        { success: false, error: "Proof already recorded for this allocation" },
         { status: 400 }
       );
     }

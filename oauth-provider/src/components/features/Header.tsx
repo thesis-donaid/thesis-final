@@ -271,7 +271,7 @@ export default function Header(){
                     {user ? (
                         <div className='hidden md:flex items-center space-x-2 lg:space-x-3 xl:space-x-4 relative' ref={logoutDropdownRef}>
                             {/* Mode Switch - Hidden on smaller desktops */}
-                            <div className='hidden lg:flex items-center space-x-2'>
+                            <div className='hidden md:flex items-center space-x-2'>
                                 <span className="text-[10px] xl:text-xs font-semibold uppercase tracking-wider text-gray-400 whitespace-nowrap">
                                     {switchMode ? 'Switch Original' : `${user.role} Mode`}
                                 </span>
