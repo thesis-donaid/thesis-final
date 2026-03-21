@@ -40,6 +40,7 @@ export async function GET(req: NextRequest) {
                 _sum: { amount: true }
             }),
             prisma.allocation.aggregate({
+                where: { is_disbursed: false },
                 _sum: { amount: true }
             }),
             prisma.pool.aggregate({

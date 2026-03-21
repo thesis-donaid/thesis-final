@@ -39,8 +39,7 @@ const REGISTERD_LINKS = [
 
 const BENEFICIARY_LINKS = [
   { href: '/beneficiary', label: 'Dashboard'},
-  { href: '/beneficiary/requests', label: 'Requests' },
-  { href: '/beneficiary/impacts', label: 'Impacts'}
+  { href: '/beneficiary/requests', label: 'Requests' }
 ]
 
 

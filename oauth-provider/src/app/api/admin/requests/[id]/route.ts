@@ -194,7 +194,11 @@ export async function PATCH(
                     include: {
                         donationAllocations: {
                             include: {
-                                donation: true,
+                                donation: {
+                                    include: {
+                                        registeredDonor: { include: { user: true } }
+                                    }
+                                },
                             },
                         },
                     },
@@ -275,6 +279,31 @@ export async function PATCH(
                         } catch (emailError) {
                             console.error(`Failed to send disbursement email to donor ${donorEmail}:`, emailError);
                         }
+
+                        // Notify donor via Pusher
+                        if (da.donation.registeredDonor?.userId) {
+                            try {
+                                const notificationData = {
+                                    title: "Funds Disbursed",
+                                    message: `₱${da.amount_used.toLocaleString()} of your donation was successfully disbursed for ${updated.purpose}.`,
+                                    type: "disbursement",
+                                    link: "/donor/impacts"
+                                };
+                                await prisma.userNotification.create({
+                                    data: {
+                                        userId: da.donation.registeredDonor.userId,
+                                        ...notificationData
+                                    }
+                                });
+                                await pusherServer.trigger(
+                                    `user-${da.donation.registeredDonor.userId}`,
+                                    "notification",
+                                    notificationData
+                                );
+                            } catch(e) {
+                                console.error("Failed pusher send", e);
+                            }
+                        }
                     }
                 }
             }
@@ -316,6 +345,30 @@ export async function PATCH(
                                 });
                             } catch (emailError) {
                                 console.error(`Failed to send disbursement email to donor ${donation.email}:`, emailError);
+                            }
+
+                            if (donation.registeredDonor?.userId) {
+                                try {
+                                    const notificationData = {
+                                        title: "Funds Disbursed",
+                                        message: `Your pool donation was successfully disbursed for ${updated.purpose}.`,
+                                        type: "disbursement",
+                                        link: "/donor/impacts"
+                                    };
+                                    await prisma.userNotification.create({
+                                        data: {
+                                            userId: donation.registeredDonor.userId,
+                                            ...notificationData
+                                        }
+                                    });
+                                    await pusherServer.trigger(
+                                        `user-${donation.registeredDonor.userId}`,
+                                        "notification",
+                                        notificationData
+                                    );
+                                } catch(e) {
+                                    console.error("Failed pusher send", e);
+                                }
                             }
                         }
                     }
